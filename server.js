@@ -4,6 +4,9 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 mongoose.connect(process.env.DB_URI); // || 'mongodb://localhost/exercise-track' )
+// Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
+// by default, you need to set it to false.
+mongoose.set('useFindAndModify', false);
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -12,11 +15,18 @@ app.use(bodyParser.json());
 const trackerSchema = new mongoose.Schema(
   {
     userName: String, // I have used this schema to create profile, and to record logs
-    description: String, // could have had a log[] to hold all logs for each user...next time
-    duration: Number,
-    date: Date
-  },
-  { timestamps: true }
+    date: Date,
+    count: Number,
+    log: [
+      {
+        // this  log[] holds all logs for each user
+        description: String,
+        duration: Number,
+        date: Date
+      }
+    ]
+  }
+  // not needed, but if it doesn't interfere, should use these
 );
 const trackerModel = mongoose.model("Tracker", trackerSchema);
 console.log(mongoose.connection.readyState);
@@ -65,18 +75,19 @@ app.post("/api/exercise/new-user", async function(req, res) {
   //check to see if our input is an ID
   if (username) {
     await trackerModel
-      .findOne({ userName: username, description: "create profile" + username })
+      .findOne({ userName: username }) //description: "create profile" + username })
       .exec()
       .then(docs => {
         if (docs) {
           existingUser = true;
-          console.log("Existing user " + docs.userName);
+          console.log("Existing user " + docs.userName + "FOUND " + docs._id);
           //   document.addEventListener("click", function(){
           //     document.getElementById("dbData").innerHTML = ("Hello "+docs._id);
           //   });
-          return res.send(
-            "Found your profile " + username + " your Id is: " + docs._id
-          );
+          return res.json({
+            username: username,
+            _id: docs._id
+          });
         }
       })
       .catch(err => {
@@ -113,15 +124,22 @@ app.post("/api/exercise/new-user", async function(req, res) {
     if (req.body.date) {
       date = req.body.date;
     }
-    console.log("create doc at line 90");
+    console.log("create doc at line 117");
     var tracker = new trackerModel({
       userName: username,
-      description: "create profile" + username, //create profile used to search database to get unique user id for this user to store all logs under
-      duration: null,
-      date: date
+      date: date, //create profile used to search database to get unique user id for this user to store all logs under
+      count: 0,
+      log: [
+        {
+          userName: "create profile" + username,
+          description: "create profile",
+          date
+        }
+      ]
     });
-    console.log("Line 97 connection:" + mongoose.connection.readyState);
-
+    console.log(
+      "Line 128 DB connection State is:" + mongoose.connection.readyState
+    );
     //save this document to the db
     console.log(
       "tracker to save to db=" +
@@ -135,7 +153,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       } else console.log("MongoDb has Stored " + tracker + " it's saved");
     });
     // Actual app would use document? to pre-set HTML user id @ input userId field
-    res.json({ "Your Id to record logs": tracker._id + tracker.userName });
+    res.json({ username: tracker.userName, _id: tracker._id });
   }
 });
 
@@ -148,7 +166,7 @@ app.get("/api/exercise/users/", async function(req, res) {
     .exec()
     .then(async docs => {
       arrayOfUserDocs.push(docs);
-      arrayOfUserDocs = arrayOfUserDocs[0];
+      arrayOfUserDocs = arrayOfUserDocs[0]; // array was in location[0]
       arrayOfUserDocs.forEach(user => {
         //for(var i=0; i<arrayOfUserDocs.length; i++){
         var thisUser = user.userName;
@@ -179,38 +197,75 @@ app.post("/api/exercise/add", async function(req, res) {
         "please enter valid userId, use create new user to look up your userId"
     );
   }
-
+  console.log(
+    "Line 201 about to save log. connection:" + mongoose.connection.readyState
+  );
+  var newLog = [{ description, duration, date }];
+  //add data verification here
   await trackerModel
-    .findOne({ _id: userId })
+    .findOneAndUpdate(
+      { _id: userId },
+      {
+        $push: {
+          log: newLog
+        },
+        $inc: {
+          count: 1
+        }
+       },{returnNewDocument : true},
+       (err, doc) => {
+         if (err) return res.status(500).send({ error: err });
+         return res.send("Succesfully saved."+doc);  // now true: returns NEW doc
+       }
+    )
     .exec()
-    .then(async docs => {
-      if (docs) {
-        console.log("Yes- valid userId " + docs.userName + docs._id);
-        //allow record to be made:
-        var tracker = new trackerModel({
-          userName: docs.userName,
-          description: description,
-          duration: duration,
-          date: date
-        });
-        console.log(
-          "Line 134 about to save log. connection:" +
-            mongoose.connection.readyState
-        );
-        console.log(tracker.description + " saved to database :)  " + tracker);
-        await tracker.save(err => {
-          if (err) {
-            return "error saving to data base" + err;
-          } else console.log("MongoDb has Stored " + tracker + " it's saved");
-        });
-        return res.json(tracker); // reDirect to show all logs rom this user?
-      } // closes if (docs)   ie. if user ID is in database
-      else
-        return res.send(
-          "No records founPlease create new user first to get your ID"
-        );
-    });
-});
+    .catch(err => {
+    console.log(err);
+    res.send("Couldn't access database to check for username");
+  });
+   // .then(async docs => {
+   //   if (docs) {
+   //     console.log("Yes- valid userId " + docs.userName + docs._id);
+        //by default returns original before update-not needed
+   //     console.log(docs);
+   //     res.send("saved log for "+ docs.userName)
+   //   } else
+   //     return res.send(
+   //       "No records found Please create new user first to get your ID"
+    //    );
+
+      // await trackerModel
+      //   .findOne({ _id: userId })
+      //   .exec()
+      //   .then(async docs => {
+      //     if (docs) {
+      //       console.log("Yes- valid userId " + docs.userName + docs._id);
+      //       //allow record to be made:
+      // var tracker = new trackerModel({
+      //   userName: docs.userName,
+      //   log:{
+      //     description: description,
+      //     duration: duration,
+      //     date: date}
+      // });
+
+      // use $push to add log to [] - same id?
+
+      //        console.log(tracker.description + " saved to database :)  " + tracker);
+      // await tracker.save(err => {
+      //   if (err) {
+      //     return "error saving to data base" + err;
+      //   } else console.log("MongoDb has Stored " + tracker + " it's saved");
+      // });
+      // return res.json({"_id":docs._id,tracker}); // reDirect to show all logs rom this user?
+      //  } // closes if (docs)   ie. if user ID is in database
+      // else
+      //   return res.send(
+      //     "No records founPlease create new user first to get your ID"
+      //   );
+    //}); // ends .then()
+  
+}); // closes this api endpoint
 
 // get request to this api returns all logs for all users
 //app.get("/api/exercise/log/", async function(req, res) {
@@ -257,18 +312,17 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
   let ourUserName = "";
   let { _id, from, to, limit } = req.query; // load userName in URL query ?userN=tara
   //_id=new mongoose.Types.ObjectId(_id);
+  let logCount = 0;
   if (!_id) {
     await trackerModel
       .find()
       .exec()
       .then(docs => {
-       return res.json({ id: "All", Logs: docs.length, docs }); // if no id, display all logs
+        return res.json({ id: "All", Logs: docs.length, docs }); // if no id, display all logs
       })
       .catch(err => {
         res.send(err);
       });
-
-   
   }
   console.log(_id + from + to + limit);
   if (_id) {
@@ -306,23 +360,23 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
         res.send(err);
       });
   } // closes if(id)
-  if (ourUserName) {    // if we got it from DB find logs under that name
+  if (ourUserName) {
+    // if we got it from DB find logs under that name
     await trackerModel
       .find({
-        userName: ourUserName })
+        userName: ourUserName
+      })
       .exec()
       .then(docs => {
-        ourDocsArray = docs;
+        ourDocsArray = docs; // loads up our data into []
+        logCount = docs[0].count
       });
   }
   if (!to && !from && !limit) {
-    if(_id){
+    if (_id) {
+      // if no parameters set, return all docs for user
       res.send(
-        "We have " +
-          ourDocsArray.length +
-          "records for " +
-          ourUserName +
-          ourDocsArray
+        "We have " + logCount + " records for " + ourUserName + ourDocsArray
       );
     }
   }
@@ -341,7 +395,7 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
     let counter = finalDocArray.length;
     console.log("compare to date: " + to);
     for (var i = 0; i < counter; i++) {
-      let docDate = new Date(finalDocArray[i].date);
+      let docDate = new Date(finalDocArray[i].log.date);
       console.log(
         toDate +
           toDate.getTime() +
@@ -353,8 +407,8 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
         // if date is after 'to', delete that element
         finalDocArray.splice(i, 1);
         console.log("it worked item deleted");
-        i--;   // because we deleted this index next one slide here
-        counter--;  //now reduce length to reflect new array
+        i--; // because we deleted this index next one slide here
+        counter--; //now reduce length to reflect new array
         //}
       }
     }
@@ -365,14 +419,14 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
       // if 'to' not set, get all records for user
       finalDocArray = ourDocsArray[0];
     }
-    let tempArray = finalDocArray.filter((log)=> {
+    let tempArray = finalDocArray.filter(log => {
       let logDate = new Date(log.date);
       console.log(logDate);
       if (fromDate.getTime() < logDate.getTime()) {
         return true;
       } else return false;
     });
-    finalDocArray=tempArray;
+    finalDocArray = tempArray;
   }
   if (limit) {
     if (finalDocArray.length > limit) {
@@ -380,18 +434,16 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
       finalDocArray.length = limit;
     }
   }
-  if(ourUserName){
-    if(!finalDocArray||(finalDocArray.length<1)){
-      res.send("No docs found in those dates-try other date range");
-    }
-    res.send(
-      
-      ourUserName + " has " + finalDocArray.length + " logs " + finalDocArray
-    );
-  }   
+  // if (ourUserName) {
+  //   if (!finalDocArray || finalDocArray.length < 1) {
+  //     res.send("No docs found in those dates-try other date range");
+  //   }
+  //   res.send(
+  //     ourUserName + " has " + finalDocArray.length + " logs " + finalDocArray
+  //   );
+  // }
   // closes if(ourUserName)
 });
-
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
