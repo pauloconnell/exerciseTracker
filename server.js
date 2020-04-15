@@ -124,7 +124,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
     if (req.body.date) {
       date = req.body.date;
     }
-    console.log("create doc at line 117");
+    //console.log("create doc at line 117");
     var tracker = new trackerModel({
       userName: username,
       date: date, //create profile used to search database to get unique user id for this user to store all logs under
@@ -137,16 +137,16 @@ app.post("/api/exercise/new-user", async function(req, res) {
         }
       ]
     });
-    console.log(
-      "Line 128 DB connection State is:" + mongoose.connection.readyState
-    );
+   // console.log(
+   //   "Line 128 DB connection State is:" + mongoose.connection.readyState
+   // );
     //save this document to the db
-    console.log(
-      "tracker to save to db=" +
-        tracker +
-        "saved to database :) _id= " +
-        tracker._id
-    );
+   // console.log(
+      // "tracker to save to db=" +
+      //   tracker +
+      //   "saved to database :) _id= " +
+      //   tracker._id
+//    );
     await tracker.save(err => {
       if (err) {
         return "error saving to data base" + err;
@@ -197,9 +197,9 @@ app.post("/api/exercise/add", async function(req, res) {
         "please enter valid userId, use create new user to look up your userId"
     );
   }
-  console.log(
-    "Line 201 about to save log. connection:" + mongoose.connection.readyState
-  );
+  // console.log(
+  //   "Line 201 about to save log. connection:" + mongoose.connection.readyState
+  // );
   var newLog = [{ description, duration, date }];
   //add data verification here
   await trackerModel
@@ -215,7 +215,8 @@ app.post("/api/exercise/add", async function(req, res) {
        },{returnNewDocument : true},
        (err, doc) => {
          if (err) return res.status(500).send({ error: err });
-         return res.send("Succesfully saved."+doc);  // now true: returns NEW doc
+          res.json(doc);
+         // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log
        }
     )
     .exec()
@@ -375,8 +376,8 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
   if (!to && !from && !limit) {
     if (_id) {
       // if no parameters set, return all docs for user
-      res.send(
-        "We have " + logCount + " records for " + ourUserName + ourDocsArray
+      res.json(
+         ourDocsArray
       );
     }
   }
