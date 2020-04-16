@@ -236,7 +236,7 @@ app.post("/api/exercise/add", async function(req, res) {
          if (err) return res.status(500).send({ error: err });
           if (doc) {
             //newLog.unshift(doc.userName)
-            return res.json(doc);
+            return res.json({doc});
           } // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log
        }
     );
