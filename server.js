@@ -14,14 +14,17 @@ app.use(bodyParser.json());
 //define our schema:
 const trackerSchema = new mongoose.Schema(
   {
-    userName: String, // I have used this schema to create profile, and to record logs
+    userName: String, // Schema for users and docs will be kept in []log
+   // _id: Number,
     date: Date,
     count: Number,
     log: [
       {
         // this  log[] holds all logs for each user
+        userName: String,
         description: String,
         duration: Number,
+       // _id: Number,
         date: Date
       }
     ]
@@ -87,6 +90,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
           return res.json({
             username: username,
             _id: docs._id
+            
           });
         }
       })
@@ -124,15 +128,19 @@ app.post("/api/exercise/new-user", async function(req, res) {
     if (req.body.date) {
       date = req.body.date;
     }
-    //console.log("create doc at line 117");
+    console.log("Schema creation at line 130");
+    //var _id= new mongoose.Types.ObjectId();  //creates our _id
     var tracker = new trackerModel({
       userName: username,
+      
       date: date, //create profile used to search database to get unique user id for this user to store all logs under
       count: 0,
       log: [
         {
           userName: "create profile" + username,
           description: "create profile",
+          duration: 0,
+         //userId: 
           date
         }
       ]
@@ -153,7 +161,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       } else console.log("MongoDb has Stored " + tracker + " it's saved");
     });
     // Actual app would use document? to pre-set HTML user id @ input userId field
-    res.json({ username: tracker.userName, _id: tracker._id });
+    res.json({ tracker, username: tracker.userName, _id: tracker._id });
   }
 });
 
@@ -186,6 +194,7 @@ app.get("/api/exercise/users/", async function(req, res) {
 
 // this is where the exercise is logged
 app.post("/api/exercise/add", async function(req, res) {
+  var userName;
   let { userId, description, duration, date } = req.body;
   if (!date) {
     date = new Date();
@@ -197,10 +206,20 @@ app.post("/api/exercise/add", async function(req, res) {
         "please enter valid userId, use create new user to look up your userId"
     );
   }
-  // console.log(
-  //   "Line 201 about to save log. connection:" + mongoose.connection.readyState
-  // );
-  var newLog = [{ description, duration, date }];
+  // get userName from userId
+  await trackerModel.findOne(
+    {_id: userId})
+    .exec()
+    .then( async docs=>{
+    userName=docs.userName;
+  })
+    .catch(err=> console.log("error occured while accessing DB looking up "+userId));
+  
+  
+    console.log(
+       "Line 209 about to get userName and save log. connection:" + mongoose.connection.readyState
+    );
+  var newLog = [{ userName, description, duration, userId, date }];
   //add data verification here
   await trackerModel
     .findOneAndUpdate(
@@ -212,18 +231,20 @@ app.post("/api/exercise/add", async function(req, res) {
         $inc: {
           count: 1
         }
-       },{returnNewDocument : true},
+       },{'new': true},
        (err, doc) => {
          if (err) return res.status(500).send({ error: err });
-          res.json(doc);
-         // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log
+          if (doc) {
+            //newLog.unshift(doc.userName)
+            return res.json(doc);
+          } // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log
        }
-    )
-    .exec()
-    .catch(err => {
-    console.log(err);
-    res.send("Couldn't access database to check for username");
-  });
+    );
+  //   .exec()
+  //   .catch(err => {
+  //   console.log(err);
+  //   res.send("Couldn't access database to check for username");
+  // });
    // .then(async docs => {
    //   if (docs) {
    //     console.log("Yes- valid userId " + docs.userName + docs._id);
