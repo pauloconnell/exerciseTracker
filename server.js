@@ -134,13 +134,13 @@ app.post("/api/exercise/new-user", async function(req, res) {
       userName: username,
       
       date: date, //create profile used to search database to get unique user id for this user to store all logs under
-      count: 0,
+      count: 0,  // count keeps track of # of workout logs
       log: [
         {
           userName: "create profile" + username,
           description: "create profile",
           duration: 0,
-         //userId: 
+         //userId: auto added
           date
         }
       ]
@@ -161,7 +161,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       } else console.log("MongoDb has Stored " + tracker + " it's saved");
     });
     // Actual app would use document? to pre-set HTML user id @ input userId field
-    res.json({ tracker, username: tracker.userName, _id: tracker._id });
+    res.json({ tracker });
   }
 });
 
@@ -213,7 +213,7 @@ app.post("/api/exercise/add", async function(req, res) {
     .then( async docs=>{
     userName=docs.userName;
   })
-    .catch(err=> console.log("error occured while accessing DB looking up "+userId));
+    .catch(err=> console.log("error occured while accessing DB looking up "+userId+" copy your userId again and retry"));
   
   
     console.log(
@@ -221,7 +221,9 @@ app.post("/api/exercise/add", async function(req, res) {
     );
   var newLog = [{ userName, description, duration, userId, date }];
   //add data verification here
-  await trackerModel
+  var newDoc;
+  try{
+    await trackerModel
     .findOneAndUpdate(
       { _id: userId },
       {
@@ -231,15 +233,35 @@ app.post("/api/exercise/add", async function(req, res) {
         $inc: {
           count: 1
         }
-       },{'new': true},
-       (err, doc) => {
-         if (err) return res.status(500).send({ error: err });
-          if (doc) {
-            //newLog.unshift(doc.userName)
-            return res.json({doc});
-          } // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log
-       }
+       },{'new': true}
+      // .then((doc)=>{
+      //  newDoc=doc;
+     // })
     );
+    //return res.json(newDoc);
+  }
+  catch (err){
+         if (err){
+           console.log("error line 245");
+           res.status(500).send({ error: err.toString });
+         }
+           // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log    
+  }
+  
+  //retrieve log in user obj to send back
+  
+  await trackerModel
+    .findOne({"_id": userId })
+     .exec()
+     .then(docs => {
+       if (docs) {
+         res.json(docs);
+       } else return res.send("No logs found");
+     })
+     .catch(err => {
+       console.log(err);
+       res.send("Couldn't access database to retrieve _id logs");
+     });
   //   .exec()
   //   .catch(err => {
   //   console.log(err);
@@ -286,7 +308,7 @@ app.post("/api/exercise/add", async function(req, res) {
       //     "No records founPlease create new user first to get your ID"
       //   );
     //}); // ends .then()
-  
+    res.json(newDoc);
 }); // closes this api endpoint
 
 // get request to this api returns all logs for all users
