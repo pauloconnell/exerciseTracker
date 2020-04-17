@@ -158,10 +158,25 @@ app.post("/api/exercise/new-user", async function(req, res) {
     await tracker.save(err => {
       if (err) {
         return "error saving to data base" + err;
-      } else console.log("MongoDb has Stored " + tracker + " it's saved");
+      } else{
+        console.log("MongoDb has Stored " + tracker + " it's saved");
+       res.send(tracker);
+      }
     });
-    // Actual app would use document? to pre-set HTML user id @ input userId field
-    res.json({ tracker });
+    // now return the created doc to the user
+  await trackerModel
+    .findOne({userName:username})
+    .exec()
+    .then(docs=>{
+      if(docs){
+        res.send(docs);
+      }
+    })
+    .catch(err => {
+      console.log(err);
+    });
+    
+  
   }
 });
 
