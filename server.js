@@ -169,6 +169,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
     .exec()
     .then(docs=>{
       if(docs){
+        res.set('Content-Type', 'Object');
         res.send(docs);
       }
     })
