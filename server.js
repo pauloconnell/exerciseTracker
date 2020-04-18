@@ -14,6 +14,7 @@ app.use(bodyParser.json());
 //define our schema:
 const trackerSchema = new mongoose.Schema(
   {
+    _id:{ type: mongoose.Schema.ObjectId, auto: true },
     userName: String, // Schema for users and docs will be kept in []log
    // _id: Number,
     date: Date,
@@ -24,12 +25,12 @@ const trackerSchema = new mongoose.Schema(
         userName: String,
         description: String,
         duration: Number,
-       // _id: Number,
+       _id: mongoose.Schema.ObjectId,
         date: Date
       }
     ]
   }
-  // not needed, but if it doesn't interfere, should use these
+  
 );
 const trackerModel = mongoose.model("Tracker", trackerSchema);
 console.log(mongoose.connection.readyState);
@@ -129,18 +130,18 @@ app.post("/api/exercise/new-user", async function(req, res) {
       date = req.body.date;
     }
     console.log("Schema creation at line 130");
-    //var _id= new mongoose.Types.ObjectId();  //creates our _id
+    var _id= new mongoose.Types.ObjectId();  //creates our _id
     var tracker = new trackerModel({
+      _id,
       userName: username,
-      
       date: date, //create profile used to search database to get unique user id for this user to store all logs under
       count: 0,  // count keeps track of # of workout logs
       log: [
         {
-          userName: "create profile" + username,
+          userName: username,
           description: "create profile",
           duration: 0,
-         //userId: auto added
+         _id,
           date
         }
       ]
@@ -159,23 +160,26 @@ app.post("/api/exercise/new-user", async function(req, res) {
       if (err) {
         return "error saving to data base" + err;
       } else{
-        console.log("MongoDb has Stored " + tracker + " it's saved");
-       res.send(tracker);
+        res.json(tracker);
+  
+        //return res.send(tracker);
       }
     });
+    // wait for mongodb to update
+   // sleep(1000);
     // now return the created doc to the user
-  await trackerModel
-    .findOne({userName:username})
-    .exec()
-    .then(docs=>{
-      if(docs){
-        res.set('Content-Type', 'Object');
-        res.send(docs);
-      }
-    })
-    .catch(err => {
-      console.log(err);
-    });
+//   await trackerModel
+//     .findOne({userName:username})
+//     .exec()
+//     .then(docs=>{
+//       if(docs){
+//        // res.set('Content-Type', 'Object');
+//        return res.json(docs);
+//       }else res.send("No records for username: "+username);
+//     })
+//     .catch(err => {
+//       console.log(err);
+//     });
     
   
   }
@@ -232,15 +236,15 @@ app.post("/api/exercise/add", async function(req, res) {
     .catch(err=> console.log("error occured while accessing DB looking up "+userId+" copy your userId again and retry"));
   
   
-    console.log(
-       "Line 209 about to get userName and save log. connection:" + mongoose.connection.readyState
-    );
+ //   console.log(
+ //      "Line 209 about to get userName and save log. connection:" + mongoose.connection.readyState
+ //   );
   var newLog = [{ userName, description, duration, userId, date }];
   //add data verification here
   var newDoc;
   try{
     await trackerModel
-    .findOneAndUpdate(
+    .findByIdAndUpdate(
       { _id: userId },
       {
         $push: {
@@ -249,7 +253,12 @@ app.post("/api/exercise/add", async function(req, res) {
         $inc: {
           count: 1
         }
-       },{'new': true}
+       },{'new': true, lean:true},
+      // async docs=>{
+      //   if(docs){
+      //     res.json(docs);
+      //   }
+      //}
       // .then((doc)=>{
       //  newDoc=doc;
      // })
@@ -263,7 +272,10 @@ app.post("/api/exercise/add", async function(req, res) {
          }
            // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log    
   }
-  
+  const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+  sleep(2000);
   //retrieve log in user obj to send back
   
   await trackerModel
