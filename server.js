@@ -90,7 +90,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
           //   });
           return res.json({
             username: username,
-            _id: docs._id
+            _id: mongoose.Types.ObjectId(docs._id)
             
           });
         }
@@ -272,10 +272,10 @@ app.post("/api/exercise/add", async function(req, res) {
          }
            // return res.send( doc._id+ doc.log[doc.log.length-1]);  // now true: returns NEW doc-pulled out Log    
   }
-  const sleep = (milliseconds) => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
-  sleep(2000);
+//   const sleep = (milliseconds) => {
+//   return new Promise(resolve => setTimeout(resolve, milliseconds))
+// }
+//   sleep(2000);
   //retrieve log in user obj to send back
   
   await trackerModel
