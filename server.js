@@ -88,11 +88,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
           //   document.addEventListener("click", function(){
           //     document.getElementById("dbData").innerHTML = ("Hello "+docs._id);
           //   });
-          return res.json({
-            username: username,
-            _id: mongoose.Types.ObjectId(docs._id)
-            
-          });
+          return res.json(docs);
         }
       })
       .catch(err => {
@@ -160,7 +156,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       if (err) {
         return "error saving to data base" + err;
       } else{
-        res.json(tracker);
+        res.send(tracker);
   
         //return res.send(tracker);
       }
@@ -283,7 +279,7 @@ app.post("/api/exercise/add", async function(req, res) {
      .exec()
      .then(docs => {
        if (docs) {
-         res.json(docs);
+         res.send(docs);
        } else return res.send("No logs found");
      })
      .catch(err => {
