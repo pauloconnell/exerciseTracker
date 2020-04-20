@@ -32,7 +32,7 @@ const trackerSchema = new mongoose.Schema(
   }
   
 );
-const trackerModel = mongoose.model("Tracker", trackerSchema);
+const TrackerModel = mongoose.model("TrackerModel", trackerSchema);
 console.log(mongoose.connection.readyState);
 
 //add static file - style.css
@@ -78,7 +78,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
   let existingUser = false; // we will get one or the other name or ID
   //check to see if our input is an ID
   if (username) {
-    await trackerModel
+    await TrackerModel
       .findOne({ userName: username }) //description: "create profile" + username })
       .exec()
       .then(docs => {
@@ -127,7 +127,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
     }
     console.log("Schema creation at line 130");
     var _id= new mongoose.Types.ObjectId();  //creates our _id
-    var tracker = new trackerModel({
+    var tracker = new TrackerModel({
       _id,
       userName: username,
       date: date, //create profile used to search database to get unique user id for this user to store all logs under
@@ -185,7 +185,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
 app.get("/api/exercise/users/", async function(req, res) {
   let arrayOfUserDocs = [];
   let arrayOfUsers = [];
-  await trackerModel
+  await TrackerModel
     .find()
     .exec()
     .then(async docs => {
@@ -223,7 +223,7 @@ app.post("/api/exercise/add", async function(req, res) {
     );
   }
   // get userName from userId
-  await trackerModel.findOne(
+  await TrackerModel.findOne(
     {_id: userId})
     .exec()
     .then( async docs=>{
@@ -239,7 +239,7 @@ app.post("/api/exercise/add", async function(req, res) {
   //add data verification here
   var newDoc;
   try{
-    await trackerModel
+    await TrackerModel
     .findByIdAndUpdate(
       { _id: userId },
       {
@@ -274,7 +274,7 @@ app.post("/api/exercise/add", async function(req, res) {
 //   sleep(2000);
   //retrieve log in user obj to send back
   
-  await trackerModel
+  await TrackerModel
     .findOne({"_id": userId })
      .exec()
      .then(docs => {
@@ -382,7 +382,7 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
   //_id=new mongoose.Types.ObjectId(_id);
   let logCount = 0;
   if (!_id) {
-    await trackerModel
+    await TrackerModel
       .find()
       .exec()
       .then(docs => {
@@ -412,7 +412,7 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
 
     // get userName from Db as all logs stored under user name
     // ie. each log get's it's own unique _id, so it's sorted by username
-    await trackerModel
+    await TrackerModel
       .findById(_id)
       .exec()
       .then(async docs => {
@@ -430,7 +430,7 @@ app.get("/api/exercise/log/:_id?/:from?/:to?/:limit?", async function(
   } // closes if(id)
   if (ourUserName) {
     // if we got it from DB find logs under that name
-    await trackerModel
+    await TrackerModel
       .find({
         userName: ourUserName
       })
