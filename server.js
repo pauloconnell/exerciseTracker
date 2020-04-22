@@ -132,15 +132,15 @@ app.post("/api/exercise/new-user", async function(req, res) {
       userName: username,
       date: date, //create profile used to search database to get unique user id for this user to store all logs under
       count: 0,  // count keeps track of # of workout logs
-      log: [
-        {
-          userName: username,
-          description: "create profile",
-          duration: 0,
-         _id,
-          date
-        }
-      ]
+      log:[]
+        // {
+        //   userName: username,
+        //   description: "create profile",
+        //   duration: 0,
+        //  _id,
+        //   date
+        // }
+      
     });
    // console.log(
    //   "Line 128 DB connection State is:" + mongoose.connection.readyState
@@ -156,7 +156,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       if (err) {
         return "error saving to data base" + err;
       } else{
-        res.send(tracker);
+        res.json(tracker.userName, tracker._id);
   
         //return res.send(tracker);
       }
