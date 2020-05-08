@@ -185,13 +185,13 @@ app.post("/api/exercise/add", async function(req, res) {
   //add data verification here
  
   
-    await newLog.save(err => {
+    await newLog.save((err, doc) => {
       if (err) {
         return "error saving to data base" + err;
       } else{
         //res.json(tracker.userName, tracker._id);
         //console.log(newLog);
-        return res.send({newLog});
+        return res.send(doc);
       }
     });
     // .findByIdAndUpdate(
