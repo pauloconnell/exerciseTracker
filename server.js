@@ -160,7 +160,16 @@ app.post("/api/exercise/add", async function(req, res) {
     date = new Date();  // if no date make now the new date
   }
   date=date.toString();
-  
+ // if (Object.prototype.toString.call(date) === "[object Date]") {
+  // it is a date
+  //if (isNaN(date.getTime())) {  // d.valueOf() could also work
+    // date is not valid
+  //} else {
+    // date is valid
+  //}
+//} else {
+  // not a date
+//}
   //check if userId is valid
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     res.send(
