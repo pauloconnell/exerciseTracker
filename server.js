@@ -151,7 +151,11 @@ app.get("/api/exercise/users/", async function(req, res) {
 app.post("/api/exercise/add", async function(req, res) {
   var username;
   let { userId, description, duration, date } = req.body;
-  duration=+duration;   // use the Unary Opperator to covert type to Number
+  if(+duration == NaN){   // use the Unary Opperator to covert type to Number
+    return res.send("please enter proper duration in minutes ");
+  }
+  else duration=parseInt(duration);
+  console.log(typeof(duration));
   if (!date||date=="") {
     date = new Date();  // if no date make now the new date
   }
