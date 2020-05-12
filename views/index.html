@@ -10,15 +10,15 @@
 
    <body>
       <div class="container">
-         <h1>Exercise tracker</h1>
-        <label id="dbData">Current users on DataBase</label>
-          <form action="/api/exercise/new-user" method="post">
+         <center><h1>Exercise tracker</h1></center>
+        
+          <form action="/api/exercise/new-user" method="post" id="form1" >
             <h3>Create a New User</h3>
             <p><code>POST /api/exercise/new-user</code></p>
             <input id="uname" type="text" name="username" placeholder="username" required>
             <input type="submit" value="Submit">
           </form>
-          <form action="/api/exercise/add" method="post">
+          <form action="/api/exercise/add" method="post" id="form2">
             <h3>Add exercises</h3>
             <p><code>POST /api/exercise/add</code></p>
             <input id="uid" type="text" name="userId" placeholder="userId*" required>

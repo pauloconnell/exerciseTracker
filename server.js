@@ -3,7 +3,15 @@ const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-mongoose.connect(process.env.DB_URI, {useNewUrlParser: true, useCreateIndex: true}); // || 'mongodb://localhost/exercise-track' )
+let ourUserArray = []; // this will hold our users from DB
+let exerciseArray = []; // this will hold our info for 'this' user
+var finalDocArray = [];
+
+
+
+
+
+mongoose.connect(process.env.DB_URI, {useNewUrlParser: true, useCreateIndex: true}); // if using node.js- || 'mongodb://localhost/exercise-track' )
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
 // by default, you need to set it to false.
 mongoose.set('useFindAndModify', false);
@@ -21,32 +29,27 @@ const UserModel = mongoose.model("UserCollection", userSchema);
 const exerciseSchema= new mongoose.Schema(
       {
         username: String,
-        userId: String,          // we will hold a string for our purposes, Mongo will use ObjectId
+        userId: String,         
         description: String,
         duration: Number,
-        date: Date
+        date: String
       });
 const ExerciseModel = mongoose.model("ExerciseCollection", exerciseSchema);
 console.log(mongoose.connection.readyState);
 
 //add static file - style.css
 //app.use("/public", express.static(process.cwd() + "/public"));   isn't working with /public route
-
-let ourUserArray = []; // this will hold our users from DB
-let exerciseArray = []; // this will hold our info for 'this' user
-var finalDocArray = [];
-//define our routes
 app.use(express.static(process.cwd() + "/public"));
+//define our routes
 app.get("/", (req, res) => {
   res.sendFile(process.cwd() + "/views/index.html");
 });
 
-// Not found middleware
+// Not found middleware - caused error - err handled locally
 //app.use((req, res, next) => {
 //  return next({status: 404, message:req.body.new+'not found'})
 //})
-
-// Error Handling middleware
+// Error Handling middleware 
 app.use((err, req, res, next) => {
   let errCode, errMessage;
   if (err.errors) {
@@ -65,6 +68,7 @@ app.use((err, req, res, next) => {
     .type("txt")
     .send(errMessage);
 });
+
 
 // recieves submit data for user name- db will return _id to use for logging exercises
 app.post("/api/exercise/new-user", async function(req, res) {
@@ -96,12 +100,9 @@ app.post("/api/exercise/new-user", async function(req, res) {
       date = req.body.date;
     }
     console.log("Schema creation at line 100");
-    
-    
-    // Possible solution? -refactor my code to create objectId from string id of userName
-    // can I cast this back and forth? - req._id will be that string?
-    
+       
     //var _id= new mongoose.Types.ObjectId();  //creates our _id
+    //left _id auto generated
     var user = new UserModel({
       username: username,
     });
@@ -111,7 +112,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       } else{
         //res.json(tracker.userName, tracker._id);
   
-        return res.send(user);
+        return res.send(user);    // will include auto generated _id
       }
     });
     
@@ -128,7 +129,7 @@ app.get("/api/exercise/users/", async function(req, res) {
     .exec()
     .then(async docs => {
       arrayOfUserDocs.push(docs);            // load doc into []
-      arrayOfUserDocs = arrayOfUserDocs[0]; // array was in location[0]
+      arrayOfUserDocs = arrayOfUserDocs[0]; // array is pushed in location[0] could have used(...docs)right?
       arrayOfUserDocs.forEach(user => {
         //for(var i=0; i<arrayOfUserDocs.length; i++){
         var thisUser = user.username;      // cycle through [] get users
@@ -149,12 +150,12 @@ app.get("/api/exercise/users/", async function(req, res) {
 // this is where the exercise is logged
 app.post("/api/exercise/add", async function(req, res) {
   var username;
-  //var date;
   let { userId, description, duration, date } = req.body;
+  duration=+duration;   // use the Unary Opperator to covert type to Number
   if (!date||date=="") {
-    date = new Date();
+    date = new Date();  // if no date make now the new date
   }
-  //console.log(req.body);
+  date=date.toString();
   
   //check if userId is valid
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -164,7 +165,7 @@ app.post("/api/exercise/add", async function(req, res) {
     );
   }
   // get username from userId  
-  await UserModel.findById( userId)
+  await UserModel.findById(userId)
     .exec()
     .then( async doc=>{
       if(doc){
@@ -178,11 +179,9 @@ app.post("/api/exercise/add", async function(req, res) {
     .catch(err=> console.log("error occured @177 while accessing DB looking up "+userId+" copy your userId again and retry"));
   
   
- //   console.log(
- //      "Line 209 about to get userName and save log. connection:" + mongoose.connection.readyState
- //   );
+
   var newLog = new ExerciseModel({ username, userId, description, duration, date });
-  //add data verification here
+  //add data verification here - but not required
  
   
     await newLog.save((err, doc) => {
@@ -191,10 +190,10 @@ app.post("/api/exercise/add", async function(req, res) {
       } else{
         //res.json(tracker.userName, tracker._id);
         //console.log(newLog);
-        return res.send(doc);
+        return res.json(doc);
       }
     });
-    // .findByIdAndUpdate(
+    // .findByIdAndUpdate(    // this is how I originally solved this using an embedded array and 1 main document
     //   { _id: userId },
     //   {
     //     $push: {
