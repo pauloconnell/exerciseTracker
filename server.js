@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const shortid=require("shortid");
 let ourUserArray = []; // this will hold our users from DB
 let exerciseArray = []; // this will hold our info for 'this' user
 var finalDocArray = [];
@@ -29,12 +30,11 @@ const UserModel = mongoose.model("UserCollection", userSchema);
 const exerciseSchema= new mongoose.Schema(
       {
         username: String,
-        userId: String,         
-        description: String,
-        duration: Number,
-        date: String
+        _id: String,         
+        count: Number,
+        log: []
       });
-const ExerciseModel = mongoose.model("ExerciseCollection", exerciseSchema);
+const ExerciseModel = mongoose.model("ExerciseCollection2", exerciseSchema);
 console.log(mongoose.connection.readyState);
 
 //add static file - style.css
@@ -73,6 +73,7 @@ app.use((err, req, res, next) => {
 // recieves submit data for user name- db will return _id to use for logging exercises
 app.post("/api/exercise/new-user", async function(req, res) {
   const { username } = req.body; //destructure POST variables
+  let log=[];                    // log will store exercise logs in the array of each user
   let existingUser = false;     // unless we find one
   if (username) {
     await UserModel
@@ -97,31 +98,62 @@ app.post("/api/exercise/new-user", async function(req, res) {
   if (!existingUser) {
     let date = new Date(); // if no date given, use this date
     if (req.body.date) {
-      date = req.body.date;
+      date = new Date(req.body.date);  //else convert string to date
     }
     console.log("Schema creation at line 100");
-       
+    //Object ID creation options:   
     //var _id= new mongoose.Types.ObjectId();  //creates our _id
-    //left _id auto generated
+    //left out because _id auto generated
+    
     var user = new UserModel({
-      username: username,
+      _id:shortid.generate(),    //Auto Generate to avoid type conversions
+      username: username      
     });
-    await user.save(err => {
+   
+    
+    //    create the exercise file in the database to update with exercises
+    
+    let exerciseModel= new ExerciseModel({
+        userName: username,
+        _id:user._id,                 
+        count:0,    
+        log:[]
+    });
+    
+    // Save our model and exercise logs to DB
+    
+     await user.save(err => {
       if (err) {
         return "error saving to data base" + err;
       } else{
         //res.json(tracker.userName, tracker._id);
   
-        return res.send(user);    // will include auto generated _id
+        //res.send(user);    // will include auto generated _id
       }
     });
     
-  
+     await exerciseModel.save((err, doc) => {
+      if (err) {
+        return "error saving to data base" + err;
+      } else{
+        //res.json(tracker.userName, tracker._id);
+        //console.log(newLog);
+        //return;// res.json(doc);
+      }
+    });
+    res.json({username:req.body.username, _id:user._id})    
   }
 });
 
+
 // Get api/exercise/users to get an array of all users
-app.get("/api/exercise/users/", async function(req, res) {
+app.get("/api/exercise/users/", async function(req, res){
+  let userList= await UserModel.find({});
+  return res.json(userList);
+});
+
+//delete below - kept incase we need to use later-all records were kept seperate, now in array in single user document
+app.get("/api/exercise/oldWayToFindusers/", async function(req, res) {
   let arrayOfUserDocs = [];
   let arrayOfUsers = [];
   await UserModel
@@ -155,7 +187,7 @@ app.post("/api/exercise/add", async function(req, res) {
     return res.send("please enter proper duration in minutes ");
   }
   else duration=parseInt(duration);
-  console.log(typeof(duration));
+  console.log("line 188 duration is type :"+typeof(duration));
   if (!date||date=="") {
     date = new Date();  // if no date make now the new date
   }
@@ -178,54 +210,47 @@ app.post("/api/exercise/add", async function(req, res) {
     );
   }
   // get username from userId  
-  await UserModel.findById(userId)
-    .exec()
-    .then( async doc=>{
-      if(doc){
-        console.log("username found: "+doc)
-      username=doc.username;
-     //  res.send(doc);
-      }
-    else
-      res.send("no docs at 178 id ="+userId);
-    })
-    .catch(err=> console.log("error occured @177 while accessing DB looking up "+userId+" copy your userId again and retry"));
+  //  NOT REQUIRED BECAUSE ID IS NOW ON THE EXERCISEMODEL
+//   await UserModel.findById(userId)
+//     .exec()
+//     .then( async doc=>{
+//       if(doc){
+//         console.log("username found: "+doc)
+//       username=doc.username;
+//      //  res.send(doc);
+//       }
+//     else
+//       res.send("no docs at 215 id ="+userId);
+//     })
+//     .catch(err=> console.log("error occured @217 while accessing DB looking up "+userId+" copy your userId again and retry"));
   
-  
-
-  var newLog = new ExerciseModel({ username, userId, description, duration, date });
   //add data verification here - but not required
  
+  let newLog={ description:req.body.description,
+      duration:parseFloat(req.body.duration),
+      date: date
+      };
   
-    await newLog.save((err, doc) => {
-      if (err) {
-        return "error saving to data base" + err;
-      } else{
-        //res.json(tracker.userName, tracker._id);
-        //console.log(newLog);
-        return res.json(doc);
-      }
-    });
-    // .findByIdAndUpdate(    // this is how I originally solved this using an embedded array and 1 main document
-    //   { _id: userId },
-    //   {
-    //     $push: {
-    //       log: newLog
-    //     },
-    //     $inc: {
-    //       count: 1
-    //     }
-    //    },{'new': true, lean:true},
-  //   .then
-  //   function(err, result) {
-  //     if (err) {
-  //       res.send(err);
-  //     } else {
-  //       res.send(result);
-  //     }
-  //   }
-  //   );
-  //   //return res.json();
+   ExerciseModel
+     .findByIdAndUpdate(    //  using an embedded array and 1 main document
+       { _id: userId },
+       {
+         $push: {
+           log: newLog
+         },
+         $inc: {
+           count: 1
+         }
+        },{'new': true, lean:true})
+     .then( function(err, result) {
+       if (err) {
+         res.send(err);
+       } else {
+         res.send(result);
+       }
+     }
+     );
+     //return res.json();
     
   // try{ 
   //}    // closes try{}
@@ -253,7 +278,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       .find()
       .exec()
       .then(docs => {
-        return res.json({ id: "All", Logs: docs.length, docs }); // if no id, display all logs
+        return res.send({ docs }); // if no id, display all logs
       })                                                        // may need to store and trim (to from limit)
       .catch(err => {
         res.send(err);
@@ -312,7 +337,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     if (exerciseArray !="") {
       // if no parameters set, return all docs for user
       res.json({
-         exerciseArray
+         exerciseArray,
       });
     }
   }
