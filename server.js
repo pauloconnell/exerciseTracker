@@ -13,8 +13,7 @@ var finalDocArray = [];
 
 
 mongoose.connect(process.env.DB_URI, {useNewUrlParser: true, useCreateIndex: true}); // if using node.js- || 'mongodb://localhost/exercise-track' )
-// Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
-// by default, you need to set it to false.
+// Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set('useFindAndModify', false);
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -30,7 +29,7 @@ const UserModel = mongoose.model("UserCollection", userSchema);
 const exerciseSchema= new mongoose.Schema(
       {
         username: String,
-        _id: String,         
+        _id: String,         // storing the string version _id as it comes into the API as a string
         count: Number,
         log: []
       });
@@ -75,6 +74,8 @@ app.post("/api/exercise/new-user", async function(req, res) {
   const { username } = req.body; //destructure POST variables
   let log=[];                    // log will store exercise logs in the array of each user
   let existingUser = false;     // unless we find one
+ 
+  
   if (username) {
     await UserModel
       .findOne({ username: username }) //find existing, else it's new user })
@@ -91,6 +92,8 @@ app.post("/api/exercise/new-user", async function(req, res) {
         res.send(err + "Couldn't access database to check for user ID");
       });
   }
+  else return res.send("please enter valid username to get userId");
+  
   console.log("about to look up user " + username);
   console.log("connection State:" + mongoose.connection.readyState);
 
@@ -101,9 +104,8 @@ app.post("/api/exercise/new-user", async function(req, res) {
       date = new Date(req.body.date);  //else convert string to date
     }
     console.log("Schema creation at line 100");
-    //Object ID creation options:   
+    //Object ID creation options:  using shortid.generate() 
     //var _id= new mongoose.Types.ObjectId();  //creates our _id
-    //left out because _id auto generated
     
     var user = new UserModel({
       _id:shortid.generate(),    //Auto Generate to avoid type conversions
@@ -148,9 +150,20 @@ app.post("/api/exercise/new-user", async function(req, res) {
 
 // Get api/exercise/users to get an array of all users
 app.get("/api/exercise/users/", async function(req, res){
-  let userList= await UserModel.find({});
-  return res.json(userList);
-});
+  async function getAllUsers(){
+    let userList= await UserModel.find({});
+     try{
+       return userList;
+    }
+    catch(err){
+      console.log(err);
+    }
+  }
+  getAllUsers().then(function(result){
+    return res.send(result);
+  
+  })
+  });
 
 //delete below - kept incase we need to use later-all records were kept seperate, now in array in single user document
 app.get("/api/exercise/oldWayToFindusers/", async function(req, res) {
@@ -182,12 +195,14 @@ app.get("/api/exercise/oldWayToFindusers/", async function(req, res) {
 // this is where the exercise is logged
 app.post("/api/exercise/add", async function(req, res) {
   var username;
+  var savedData={};          // savedData will hold updated record we saved
+  var updateResult;
   let { userId, description, duration, date } = req.body;
   if(+duration == NaN){   // use the Unary Opperator to covert type to Number
     return res.send("please enter proper duration in minutes ");
   }
   else duration=parseInt(duration);
-  console.log("line 188 duration is type :"+typeof(duration));
+  console.log("line 192 duration is type :"+typeof(duration));
   if (!date||date=="") {
     date = new Date();  // if no date make now the new date
   }
@@ -225,13 +240,14 @@ app.post("/api/exercise/add", async function(req, res) {
 //     .catch(err=> console.log("error occured @217 while accessing DB looking up "+userId+" copy your userId again and retry"));
   
   //add data verification here - but not required
- 
+ async function saveExercise(){
   let newLog={ description:req.body.description,
       duration:parseFloat(req.body.duration),
       date: date
       };
   
-   ExerciseModel
+   let updatedFile="hello";
+   updateResult=ExerciseModel
      .findByIdAndUpdate(    //  using an embedded array and 1 main document
        { _id: userId },
        {
@@ -246,10 +262,36 @@ app.post("/api/exercise/add", async function(req, res) {
        if (err) {
          res.send(err);
        } else {
-         res.send(result);
+         console.log("line 249 "+result);
+         savedData=result;
+         //return res.json(result);
+         //return res.send(result);
        }
      }
      );
+   try{
+     console.log(updateResult+"inside"+savedData._id);
+      return updateResult;
+    }
+    catch(err){
+      console.log(err)
+        }
+  
+ };  // closes saveExercise function
+
+  await saveExercise().then(function(result){
+    console.log("270 "+result);
+    res.json(result);
+  });
+  
+    
+  
+  console.log("our result ="+JSON.stringify(updateResult));
+//  console.log("username"+updatedFile.username+"description"+updatedFile.log[updatedFile.count-1].description+"duration"); //+savedData.log[updatedFile.count-1].duration+"_id"+savedData.id+"date"+updatedFile.log[updatedFile.count-1].date);
+  
+//    res.json({"username":updatedFile.username,"description":updatedFile.log[updatedFile.count-1].description,
+  //            "duration":savedData.log[updatedFile.count-1].duration,
+  //            "_id":savedData.id, "date":updatedFile.log[updatedFile.count-1].date })
      //return res.json();
     
   // try{ 
