@@ -69,39 +69,126 @@ app.use((err, req, res, next) => {
 });
 
 
+// global variable definitions:
+let username;
+let existingUser=false;
+
+
+//define some functions to access the DB that are available to all API endpoints
+// getUserID(username)
+//getAllUsers
+//saveUser
+//saveLog
+
+
+// get users id from username:
+async function getUserId(username){
+  await UserModel
+        .findOne({ username: username }) //find existing, else it's new user })
+        .exec()
+        .then(docs => {
+          if (docs) {
+            existingUser = true;
+            console.log("Existing user " + docs.username + "FOUND " + docs._id);
+            return docs;
+          }
+          else return null;
+        })
+        .catch(err => {
+          console.log(err);
+          return (err + "Couldn't access database to check for user ID");
+        });
+    }
+
+
+// function to get all users:
+
+async function getAllUsers(){
+    let userList= await UserModel.find({});
+     try{
+       return userList;
+    }
+    catch(err){
+      console.log(err);
+    }
+  }
+// function to save user:
+async function saveUser(user){
+  await user.save(err => {
+      if (err) {
+        return "error saving to data base" + err;
+      } else{
+        //res.json(tracker.userName, tracker._id);
+         return; 
+        //res.send(user);    // will include auto generated _id
+      }
+    });
+}
+// function to save exercise log
+async function saveExercise(log){
+   await log.save((err, doc) => {
+      if (err) {
+        return "error saving to data base" + err;
+      } else{
+        //res.json(tracker.userName, tracker._id);
+        //console.log(newLog);
+        return(doc);
+      }
+    });
+}
+
 // recieves submit data for user name- db will return _id to use for logging exercises
 app.post("/api/exercise/new-user", async function(req, res) {
   const { username } = req.body; //destructure POST variables
   let log=[];                    // log will store exercise logs in the array of each user
-  let existingUser = false;     // unless we find one
- 
-  
-  if (username) {
-    await UserModel
-      .findOne({ username: username }) //find existing, else it's new user })
-      .exec()
-      .then(docs => {
-        if (docs) {
-          existingUser = true;
-          console.log("Existing user " + docs.username + "FOUND " + docs._id);
-          return res.json(docs);
-        }
-      })
-      .catch(err => {
-        console.log(err);
-        res.send(err + "Couldn't access database to check for user ID");
-      });
-  }
-  else return res.send("please enter valid username to get userId");
+  var date = new Date();         // if no date given, use this date
   
   console.log("about to look up user " + username);
   console.log("connection State:" + mongoose.connection.readyState);
 
+  // accessing db from a function call as per convention
+  if(username){
+    try{
+      let searchUser=getUserId(username);
+        if(existingUser){
+          res.json({"username":searchUser.username, "_id":searchUser._id});
+        }
+    }
+    catch(err){
+        console.log(err);
+      }
+  }else return res.send("please enter valid username to get userId");
+
+  // this is old way of accessing db directly - not proper convention
+//     async function getAllUsers(){
+      
+//       await UserModel
+//         .findOne({ username: username }) //find existing, else it's new user })
+//         .exec()
+//         .then(docs => {
+//           if (docs) {
+//             existingUser = true;
+//             console.log("Existing user " + docs.username + "FOUND " + docs._id);
+//             return res.json(docs);
+//           }
+//           else return null;
+//         })
+//         .catch(err => {
+//           console.log(err);
+//           res.send(err + "Couldn't access database to check for user ID");
+//         });
+//     }
+  
+ 
+  
   //save new user's profile
   if (!existingUser) {
-    let date = new Date(); // if no date given, use this date
+    
     if (req.body.date) {
-      date = new Date(req.body.date);  //else convert string to date
+      let stringToDate=new Date(req.body.date);   //if date given...
+      if(stringToDate.getTime() != NaN){          // ensure valid date
+        date = new Date(req.body.date);             //convert string to date
+      }
     }
     console.log("Schema creation at line 100");
     //Object ID creation options:  using shortid.generate() 
@@ -123,16 +210,14 @@ app.post("/api/exercise/new-user", async function(req, res) {
     });
     
     // Save our model and exercise logs to DB
+    try{
+      await saveUser(user);
+    }
+    catch(err){
+      console.log(err);
+    }
     
-     await user.save(err => {
-      if (err) {
-        return "error saving to data base" + err;
-      } else{
-        //res.json(tracker.userName, tracker._id);
-  
-        //res.send(user);    // will include auto generated _id
-      }
-    });
+     
     
      await exerciseModel.save((err, doc) => {
       if (err) {
@@ -143,22 +228,22 @@ app.post("/api/exercise/new-user", async function(req, res) {
         //return;// res.json(doc);
       }
     });
-    res.json({username:req.body.username, _id:user._id})    
+    return res.json({username:req.body.username, _id:user._id})    
   }
 });
 
 
 // Get api/exercise/users to get an array of all users
 app.get("/api/exercise/users/", async function(req, res){
-  async function getAllUsers(){
-    let userList= await UserModel.find({});
-     try{
-       return userList;
-    }
-    catch(err){
-      console.log(err);
-    }
-  }
+  // async function getAllUsers(){
+  //   let userList= await UserModel.find({});
+  //    try{
+  //      return userList;
+  //   }
+  //   catch(err){
+  //     console.log(err);
+  //   }
+  // }
   getAllUsers().then(function(result){
     return res.send(result);
   
@@ -246,7 +331,6 @@ app.post("/api/exercise/add", async function(req, res) {
       date: date
       };
   
-   let updatedFile="hello";
    updateResult=ExerciseModel
      .findByIdAndUpdate(    //  using an embedded array and 1 main document
        { _id: userId },
@@ -280,9 +364,10 @@ app.post("/api/exercise/add", async function(req, res) {
  };  // closes saveExercise function
 
   await saveExercise().then(function(result){
-    console.log("270 "+result);
+    console.log("286 "+result);
     res.json(result);
   });
+  
   
     
   
@@ -306,10 +391,7 @@ app.post("/api/exercise/add", async function(req, res) {
 }); // closes this api endpoint
 
 //to get user logs  querry from url     ?userName=p_ollie
-app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
-  req,
-  res
-) {
+app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(req, res) {
   let ourUserName = "";
   let exerciseArray = [];    // this will hold our exercise documents
   let { userId, from, to, limit } = req.query; // load userName in URL query ?userN=tara
