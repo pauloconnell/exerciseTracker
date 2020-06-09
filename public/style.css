@@ -32,6 +32,12 @@ form {
   max-width: 340px;
   border-radius: 5px;
 }
+.form1{
+  float: left;
+}
+.form2{
+  float:right;
+}
 
 input {
   display: block;
