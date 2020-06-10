@@ -4,10 +4,10 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const shortid = require("shortid");
-let ourUserArray = []; // this will hold our users from DB
-let exerciseArray = []; // this will hold our info for 'this' user
+var ourUserArray = []; // this will hold our users from DB
+var exerciseArray = []; // this will hold our info for 'this' user
 var finalDocArray = [];
-
+var ourUserName;
 mongoose.connect(process.env.DB_URI, {
   useNewUrlParser: true,
   useCreateIndex: true
@@ -85,7 +85,7 @@ async function getUserId(username, done) {
     .then(docs => {
       if (docs) {
         existingUser = true;
-        console.log("Existing user " + docs.username + "FOUND " + docs.id);
+        console.log("line 88 Existing user " + docs.username + "FOUND " + docs.id);
         done(null, docs.id);
       } else console.log("no docs found for "+username);
     })
@@ -100,7 +100,7 @@ async function getUserId(username, done) {
 async function getAllUsers(done) {
   let userList = await newUsers.find({});
   try {
-    console.log("userlist = "+userList);
+    console.log("line 103 userlist = "+JSON.stringify(userList));
     //userList=Object.entries(userList)
     done(null, userList);
   } catch (err) {
@@ -133,24 +133,25 @@ async function getUserName(id, done){
     }
     else{
       allUsers=data;
-      console.log("line 136 "+data)
+      
     }
   });
-  console.log("line 137" +Object.prototype.toString.call(allUsers));
-  var x;
-  for (x in allUsers) {
-    console.log(allUsers[x].id);
-      if (allUsers[x].id == id) {
-          username=allUsers[x].username;
-          console.log("line 116 "+username);
+  //console.log("line 137 " +allUsers.length+JSON.stringify(allUsers));
+  
+  for(var a; a<allUsers.length; a++) {
+    console.log(allUsers[a]);
+      if (allUsers[a].id == id) {
+          username=allUsers[a].username;
+          console.log("line 146 "+allUsers[a]);
       }
   }
   done(null, username);
 }
 
+// function to find all users logs
 async function getUserLog(id, done){    //called at line 530
-  let userLog;
-  let allUsers;
+  var userLog;
+  var allUsers;
   console.log("line 154 id is "+id);
   if(id==null){
     console.log("id=null at line 156");
@@ -161,49 +162,33 @@ async function getUserLog(id, done){    //called at line 530
         done(err)
       }
       if(data){
-        console.log("line 161 found "+data);
-        done(null, data);
+        console.log("line 161 found "+JSON.stringify(data));
+        userLog=data;
+        return done(null, userLog);
       }
-    }
-  );
+      else console.log("no data at line 168"+data);
+    });
+    
   }  // if id:null closed
     else{
+      console.log("175 id = "+id);
     await exerciselogs.find({id:id}, async function(err, data){
       if(err){
         console.log(err);
         done(err);
       }
       if(data){
-       console.log("Line 158 data ="+Object.prototype.toString.call(data));
-        done(null, data);
+        exerciseArray=data;
+       console.log("Line 178 data ="+data);
+       return done(null, data);
       }
-      else console.log("no data at line 161");
+      else console.log("no data at line 181");
     });
   }
-  //console.log("line 112" +userLog);
-  // let x;
-  // for (x in allUsers) {
-  //   console.log(allUsers[x].id);
-  //     if (allUsers[x].id == id) {
-  //         username=allUsers[x].username;
-  //         console.log("line 116 "+username);
-  //     }
-  // }
-  //done(null, userLog);
+  
 }
 
-// function to save user: DELETE ME!!!  Upgraded below to textbook version
-async function oldSaveUser(user) {
-  await user.save(err => {
-    if (err) {
-      return "error saving to data base" + err;
-    } else {
-      //res.json(tracker.userName, tracker._id);
-      return;
-      //res.send(user);    // will include auto generated _id
-    }
-  });
-}
+
 
 //  textbook approach:
 async function saveUser(person, done) {
@@ -255,32 +240,9 @@ async function saveExercise(log, done) {
            returnMe=results;
            done(null, results);
          }});
-    
-    
-  
-  //return savedEx(log);
   
 }
 
-
-// .then(function(err, result) {
-//   if (err) {
-//     return(err);
-//   } else {
-//     console.log("line 249 "+result);
-//     return result;
-//     //return res.json(result);
-//     //return res.send(result);
-//   }
-// }
-// );
-// try{
-//   console.log(updateResult+" line 152 "+log.id);
-//    return updateResult;
-//  }
-//  catch(err){
-//    console.log(err)
-//      }
 
 // recieves submit data for user name- db will return id to use for logging exercises
 app.post("/api/exercise/new-user", async function(req, res) {
@@ -292,7 +254,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
   console.log("connection State:" + mongoose.connection.readyState);
 
   // accessing db from a function call as per convention
-  // if (username) {
+   //if (username==null) { return res.send("Must enter username");}
         
         await getUserId(username, function(err, result){  //getUserId also sets existingUser true if so
           if(err){
@@ -304,11 +266,8 @@ app.post("/api/exercise/new-user", async function(req, res) {
           return res.json({ username: username, _id: result.toString()});
         }
          }); 
-  // } 
-  //else console.log("new User..."+username);
-        
-      
-  // this is old way of accessing db directly - not proper convention
+     
+  // accessing db directly - not proper convention use function instead
   //     async function getAllUsers(){
 
   //       await UserModel
@@ -329,7 +288,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
   //     }
 
   //save new user's profile
-  if (!existingUser) {
+  if (!existingUser) {      // set in getUserId
     if (req.body.date) {
       let stringToDate = new Date(req.body.date); //if date given...
       if (stringToDate.getTime() != NaN) {
@@ -338,8 +297,8 @@ app.post("/api/exercise/new-user", async function(req, res) {
       }
     }
     console.log("Schema creation at line 300");
-    //Object ID creation options:  using shortid.generate()
-    //var _id= new mongoose.Types.ObjectId();  //creates our _id
+    //Object ID creation options:  using shortid.generate() = String
+    //var _id= new mongoose.Types.ObjectId();  //creates our _id = ObjectId
 
     var user = new newUsers({
       id: shortid.generate(), //Auto Generate to avoid type conversions
@@ -389,16 +348,8 @@ app.post("/api/exercise/new-user", async function(req, res) {
 
 // Get api/exercise/users to get an array of all users
 app.get("/api/exercise/users/", async function(req, res) {
-  // async function getAllUsers(){
-  //   let userList= await UserModel.find({});
-  //    try{
-  //      return userList;
-  //   }
-  //   catch(err){
-  //     console.log(err);
-  //   }
-  // }
- await getAllUsers(function(err, result) {
+  
+ await getAllUsers(function(err, result) {    // defined at line 100
    if(err) console.log(err);
    return res.send(result);
   });
@@ -419,18 +370,7 @@ app.post("/api/exercise/add", async function(req, res) {
     date = new Date(); // if no date make now the new date
   }
   date = date.toString();
-  // if (Object.prototype.toString.call(date) === "[object Date]") {
-  // it is a date
-  //if (isNaN(date.getTime())) {  // d.valueOf() could also work
-  // date is not valid
-  //} else {
-  // date is valid
-  //}
-  //} else {
-  // not a date
-  //}
-
-  
+    
   let newLog = {
     //update to match format
     id: userId,
@@ -442,7 +382,7 @@ app.post("/api/exercise/add", async function(req, res) {
   await saveExercise(newLog, async function(err,result){      //defined at line 205
     if(err) console.log(err);
     else{
-     console.log("success at 404 "+result);    // result of save not needed
+     console.log("success at 404 "+result.toString());    // result of save not needed
      results=result;
     }
   });      //saveExercise @ line 129
@@ -451,24 +391,24 @@ app.post("/api/exercise/add", async function(req, res) {
     
                 
     try {
-      console.log("Saved log for "+ userId + " @ line 411");
+      console.log("Saved log for "+ userId + " @ line 389");
     } catch (err) {
       console.log(err);
     }
   
  await getUserName(userId, (err, data)=>{    //defined at line 148
    if(err){
-     console.log("line 433 Error "+err);
+     console.log("line 396 Error "+err);
    }
    else{
-     console.log(" line 136 name..."+data); 
+     console.log(" line 399 name..."+data); 
      username=data;
    }
-   console.log("username is "+username);
+   console.log("Line 402 username is "+username);
  });
 
 
-  console.log("username ="+username+"our result =" + results);
+  console.log("username ="+username+"our result =" + JSON.stringify(results));
   res.json({"_id":userId, "username":username, "log":newLog});
   //res.json({"_id":results[0].id,"username":results[0].username,"count":fltr.length,"log":fltr})
 
@@ -495,117 +435,69 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   req,
   res
 ) {
-  let ourUserName = "";
-  let exerciseArray = []; // this will hold our exercise documents
+  
+  //let exerciseArray = []; // this will hold our exercise documents
   let { userId, from, to, limit } = req.query; // load userName in URL query ?userN=tara
   //let userId=_id;            // for use later
   var allDocuments;
   let logCount = 0;
   if (userId==null) {
-    console.log("502 userId is null");
-    await getUserLog(null, async function(err,docs) {    // defined at line 151
+    console.log("445 userId is null");
+  //}
+    await getUserLog(userId, async function(err,docs) {    // defined at line 151
       if(err) return res.send('error getting documents');
       else{
         if (docs==null){
-          console.log("docs=null");
+          console.log("warning - docs=null");
         }
         allDocuments=docs;
-        console.log("507 docs are found "+Object.prototype.toString.call(docs)+docs);
-        return res.json({ docs}); // if no id, display all logs) 
+        exerciseArray=docs;
+        console.log("453 docs are found "); //+JSON.stringify(exerciseArray));
+        
+        //return res.json({ docs}); // if no id, display all logs) 
       }
     });
-      // await ExerciseModel.find()
-      // .exec()
-      // .then(docs => {
-      //   return res.send({ docs }); // if no id, display all logs
-      // }) // may need to store and trim (to from limit)
-      // .catch(err => {
-      //   res.send(err);
-      // });
   }
-  console.log(userId + from + to + limit);
-  if (userId) {
-    // if _id exists ensure it is valid
-    // if (!mongoose.Types.ObjectId.isValid(userId)) {
-    //   res.send(
-    //     userId +
-    //       "please enter valid userId, use create new user to look up your userId"
-    //   );
-    // }
-    console.log("Line 535"+
+  else{ //if (userId) {
+    console.log("look up userId ="+userId);
+    await getUserLog(userId, async function(err, logs){  //defined at line  152
+      if(err) return res.send('error getting documents');
+      else{
+          exerciseArray=logs;
+          console.log("line 466 "+logs)    
+        }
+      });
+    console.log("Line 457"+exerciseArray+
       userId +
-        " passed ObjectId check - recieved request for logs for: " +
+        " request  logs for: " +
         userId +" from "+
         from +" to "+
         to +" limit # "+
         limit
     );
-
-//     // get userName from Db as all logs stored under user name
-//     // ie. each log get's it's own unique _id, so it's sorted by username
-    
-//     await getUserName(userId, async function(err, name){
-//       if(err){
-//         console.log("failed get user name");
-//         res.send(err);
-//       }
-//       if (!name) {
-//         return res.send("No files for user " + userId);
-//       } else
-//           ourUserName = name; 
-//           console.log("Docs are stored under user  " + name);
-//           //exerciseArray = docs;
-//           //return res.json(docs);     
-//       });
-    
-    await getUserLog(userId, function(err, log){      //defined at line 150
+//console.log("line 468 looking for logs for userId:" + userId);
+//     await getUserLog(userId, async function(err, log){      //defined at line 150    
       
-      console.log("looking  for logs for userId:" + userId);
-      if(err) res.send(err+"error finding logs")  
-      if (log) {
-          console.log("log found"+Object.prototype.toString.call(log));
-          //ourUserName = docs.username; //pull userName from DB
-          exerciseArray = log;
-          console.log("logs are " + log.toString());
-         // return res.send(log);
-        }
-    });
-    // await ExerciseModel.find({id:userId})
-    //   .exec()
-    //   .then(async docs => {
-    //     console.log("looking  for userName and logs for userId:" + userId);
-    //     if (docs) {
-    //       console.log("docs found");
-    //       ourUserName = docs.username; //pull userName from DB
-    //       console.log("Line 153 Docs are stored under user  " + ourUserName);
-    //       exerciseArray = docs;
-    //       //return res.json(docs);
-    //     } else res.send("No files for user " + userId);
-    //   })
-    //   .catch(err => {
-    //     res.send(err);
-    //   });
-  } // closes if(id)
-  // if (ourUserName) {
-  //   // if we got it from DB find logs under that name
-  //   await ExerciseModel
-  //     .find({
-  //       username: ourUserName
-  //     })
-  //     .exec()
-  //     .then(docs => {
-  //       ourDocsArray = docs; // loads up our data into []
-  //       logCount = docs[0].count
-  //     });
-  // }
-  if (!to && !from && !limit) {
-    if (exerciseArray != "") {
+//       if(err) res.send(err+"error finding logs")  
+//       if (log) {
+//           console.log("log found"+JSON.stringify(log));
+//           //ourUserName = docs.username; //pull userName from DB
+//           exerciseArray = log;
+//           console.log("line 482 logs are " +exerciseArray+ JSON.stringify(exerciseArray));
+//           //return res.send(log);
+//         }
+//     });
+      } // closes if(id)
+    if (!to && !from && !limit) {
+    //if (exerciseArray != "") {
       // if no parameters set, return all docs for user
-      console.log("line 558 "+exerciseArray.toString());
+      console.log("line 540 sending exerciseArray");
       res.json({
         exerciseArray
       });
-    }
+    //}else{
+     // res.send("no dice exerciseArray is empty"+exerciseArray);
+    
   }
 
   // first extract raw data into final array
