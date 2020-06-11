@@ -252,7 +252,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
           }
           if (existingUser) {
           console.log("line 293 found user "+result.toString());
-          return res.json({ username: username, _id: result.toString()});
+          return res.json({ exisitingUser: 'foundTrue', message:'If u are a new user please choose another username',  username: username, _id: result.toString()});
         }
          }); 
      
@@ -398,7 +398,8 @@ app.post("/api/exercise/add", async function(req, res) {
 
 
   console.log("username ="+username+"our result =" + JSON.stringify(results));
-  res.json({"_id":userId, "username":username, "log":newLog});
+  res.json({"username":username, "log":newLog, "_id":userId});
+  
   //res.json({"_id":results[0].id,"username":results[0].username,"count":fltr.length,"log":fltr})
 
   //  console.log("username"+updatedFile.username+"description"+updatedFile.log[updatedFile.count-1].description+"duration"); //+savedData.log[updatedFile.count-1].duration+"_id"+savedData.id+"date"+updatedFile.log[updatedFile.count-1].date);
