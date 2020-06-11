@@ -98,7 +98,7 @@ async function getUserId(username, done) {
 // function to get all users:       called at line 423
 
 async function getAllUsers(done) {
-  let userList = await newUsers.find({});
+  let userList = await newUsers.find({}, {"id":1, "username":1, "_id":0});
   try {
     console.log("line 103 userlist = "+JSON.stringify(userList));
     //userList=Object.entries(userList)
@@ -109,18 +109,7 @@ async function getAllUsers(done) {
   }
   
 }
-async function getUser(userid, done) {
-  let user= await newUsers.find({id:userid});
-  try {
-    console.log("user = "+user);
-    //userList=Object.entries(userList)
-    done(null, user);
-  } catch (err) {
-    console.log(err);
-    done(err);
-  }
-  
-}
+
 
 // get username from userId
 
@@ -136,7 +125,7 @@ async function getUserName(id, done){
       
     }
   });
-  //console.log("line 137 " +allUsers.length+JSON.stringify(allUsers));
+  console.log("line 137 " +allUsers.length+JSON.stringify(allUsers));
   
   for(var a; a<allUsers.length; a++) {
     console.log(allUsers[a]);
@@ -172,14 +161,14 @@ async function getUserLog(id, done){    //called at line 530
   }  // if id:null closed
     else{
       console.log("175 id = "+id);
-    await exerciselogs.find({id:id}, async function(err, data){
+    await exerciselogs.find({}, async function(err, data){    // was not retrieving any docs, so will filter by id later
       if(err){
         console.log(err);
         done(err);
       }
       if(data){
         exerciseArray=data;
-       console.log("Line 178 data ="+data);
+       console.log("Line 178 got data ");
        return done(null, data);
       }
       else console.log("no data at line 181");
@@ -437,57 +426,74 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
 ) {
   
   //let exerciseArray = []; // this will hold our exercise documents
-  let { userId, from, to, limit } = req.query; // load userName in URL query ?userN=tara
+  var { userId, from, to, limit } = req.query; // load userName in URL query ?userN=tara
   //let userId=_id;            // for use later
-  var allDocuments;
+  //var allDocuments;
   let logCount = 0;
-  if (userId==null) {
-    console.log("445 userId is null");
-  //}
+  
     await getUserLog(userId, async function(err,docs) {    // defined at line 151
       if(err) return res.send('error getting documents');
       else{
         if (docs==null){
           console.log("warning - docs=null");
         }
-        allDocuments=docs;
         exerciseArray=docs;
-        console.log("453 docs are found "); //+JSON.stringify(exerciseArray));
+        console.log("453 docs are found confirmed ");//+JSON.stringify(exerciseArray));
         
         //return res.json({ docs}); // if no id, display all logs) 
       }
     });
+  if (userId==null) {
+    console.log("445 userId is null");
   }
-  else{ //if (userId) {
-    console.log("look up userId ="+userId);
-    await getUserLog(userId, async function(err, logs){  //defined at line  152
-      if(err) return res.send('error getting documents');
-      else{
-          exerciseArray=logs;
-          console.log("line 466 "+logs)    
-        }
-      });
-    console.log("Line 457"+exerciseArray+
-      userId +
-        " request  logs for: " +
-        userId +" from "+
-        from +" to "+
-        to +" limit # "+
-        limit
-    );
-//console.log("line 468 looking for logs for userId:" + userId);
-//     await getUserLog(userId, async function(err, log){      //defined at line 150    
-      
-//       if(err) res.send(err+"error finding logs")  
-//       if (log) {
-//           console.log("log found"+JSON.stringify(log));
-//           //ourUserName = docs.username; //pull userName from DB
-//           exerciseArray = log;
-//           console.log("line 482 logs are " +exerciseArray+ JSON.stringify(exerciseArray));
-//           //return res.send(log);
+  else{
+    console.log("line 450 userid = "+userId);
+    var result=exerciseArray.filter((doc)=>{
+      doc.id==userId;
+    });
+    console.log("line454 is broken"+result);
+    var newArray=[];
+    for (var b=0; b<exerciseArray.length; b++){
+      console.log("line 457"+exerciseArray[b].id+"compare to "+userId);
+      if (exerciseArray[b].id == userId){
+          newArray =exerciseArray[b];
+          console.log("found and added "+exerciseArray[b]);
+      }
+    }
+    exerciseArray=newArray;
+    console.log("451 check"+newArray);
+  }
+  //}
+//   else{ //if (userId) {
+//     console.log("look up userId ="+userId);
+//     await getUserLog(userId, async function(err, logs){  //defined at line  152
+//       if(err) return res.send('error getting documents');
+//       else{
+//           exerciseArray=logs;
+//           console.log("line 466 "+logs)    
 //         }
-//     });
-      } // closes if(id)
+//       });
+//     console.log("Line 457"+exerciseArray+
+//       userId +
+//         " request  logs for: " +
+//         userId +" from "+
+//         from +" to "+
+//         to +" limit # "+
+//         limit
+//     );
+// //console.log("line 468 looking for logs for userId:" + userId);
+// //     await getUserLog(userId, async function(err, log){      //defined at line 150    
+      
+// //       if(err) res.send(err+"error finding logs")  
+// //       if (log) {
+// //           console.log("log found"+JSON.stringify(log));
+// //           //ourUserName = docs.username; //pull userName from DB
+// //           exerciseArray = log;
+// //           console.log("line 482 logs are " +exerciseArray+ JSON.stringify(exerciseArray));
+// //           //return res.send(log);
+// //         }
+// //     });
+//       } // closes if(id)
     if (!to && !from && !limit) {
     //if (exerciseArray != "") {
       // if no parameters set, return all docs for user
