@@ -237,7 +237,7 @@ async function saveExercise(log, done) {
 app.post("/api/exercise/new-user", async function(req, res) {
   const { username } = req.body; //destructure POST variables
   let log = []; // log will store exercise logs in the array of each user
-  var date = new Date(); // if no date given, use this date
+  var date = new Date(); //  use current date
 
   console.log("about to look up user " + username);
   console.log("connection State:" + mongoose.connection.readyState);
@@ -252,7 +252,8 @@ app.post("/api/exercise/new-user", async function(req, res) {
           }
           if (existingUser) {
           console.log("line 293 found user "+result.toString());
-          return res.json({ exisitingUser: 'foundTrue', message:'If u are a new user please choose another username',  username: username, _id: result.toString()});
+          res.json({message:"username already taken"});
+            //return res.json({ exisitingUser: 'foundTrue', message:'If u are a new user please choose another username',  username: username, _id: result.toString()});
         }
          }); 
      
@@ -278,13 +279,13 @@ app.post("/api/exercise/new-user", async function(req, res) {
 
   //save new user's profile
   if (!existingUser) {      // set in getUserId
-    if (req.body.date) {
-      let stringToDate = new Date(req.body.date); //if date given...
-      if (stringToDate.getTime() != NaN) {
-        // ensure valid date
-        date = new Date(req.body.date); //convert string to date
-      }
-    }
+    // if (req.body.date) {
+    //   let stringToDate = new Date(req.body.date); //if date given...
+    //   if (stringToDate.getTime() != NaN) {
+    //     // ensure valid date
+    //     date = new Date(req.body.date); //convert string to date
+    //   }
+    // }
     console.log("Schema creation at line 300");
     //Object ID creation options:  using shortid.generate() = String
     //var _id= new mongoose.Types.ObjectId();  //creates our _id = ObjectId
@@ -398,7 +399,7 @@ app.post("/api/exercise/add", async function(req, res) {
 
 
   console.log("username ="+username+"our result =" + JSON.stringify(results));
-  res.json({"username":username, "log":newLog, "_id":userId});
+  res.json({ "_id":userId, "username":username, "log":newLog });
   
   //res.json({"_id":results[0].id,"username":results[0].username,"count":fltr.length,"log":fltr})
 
