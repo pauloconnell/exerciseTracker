@@ -117,26 +117,28 @@ async function getAllUsers(done) {
 
 async function getUserName(id, done){
   var allUsers;
-  await getAllUsers((err, data)=>{
-    if(err){
-      console.log(err);
-      done(err);
-    }
-    else{
-      allUsers=data;
+  let thisUser=await newUsers.find({"id":id});
+  //await getAllUsers((err, data)=>{
+//     if(err){
+//       console.log(err);
+//       done(err);
+//     }
+//     else{
+//       allUsers=data;
+//       done(null, data);
       
-    }
-  });
-  console.log("line 137 " +allUsers.length+JSON.stringify(allUsers));
+//     }
+//   });
+  console.log("line 137 " +JSON.stringify(thisUser));
   
-  for(var a; a<allUsers.length; a++) {
-    console.log("allUsers[a] is "+allUsers[a]);
-      if (allUsers[a].id == id) {
-          username=allUsers[a].username;
-          console.log("line 146 "+allUsers[a]);
-      }
-  }
-  done(null, username);
+  // for(var a; a<allUsers.length; a++) {
+  //   console.log("allUsers[a] is "+allUsers[a]);
+  //     if (allUsers[a].id == id) {
+  //         username=allUsers[a].username;
+  //         console.log("line 146 "+allUsers[a]);
+  //     }
+  // }
+  done(null, thisUser);
 }
 
 // function to find all users logs
@@ -372,7 +374,7 @@ app.get("/api/exercise/users/", async function(req, res) {
 
 // this is where the exercise is logged
 app.post("/api/exercise/add", async function(req, res) {
-  var username;
+  var userdata;
   var results;
   var savedData = {}; // savedData will hold updated record from DB
   var { userId, description, duration, date } = req.body;
@@ -412,20 +414,20 @@ app.post("/api/exercise/add", async function(req, res) {
       console.log(err);
     }
   
- await getUserName(userId, (err, data)=>{    //defined at line 148
+ await getUserName(userId, async function(err, data){    //defined at line 148
    if(err){
-     console.log("line 396 Error "+err);
+     console.log("line 417 Error "+err);
    }
    else{
-     console.log(" line 399 name..."+data); 
-     username=data;
+     console.log(" line 420 name..."+data); 
+     userdata=data[0];
    }
-   console.log("Line 402 username is "+username);
+   console.log("Line 402 username is "+userdata.username);
  });
 
 
-  console.log("username ="+username+"our result =" + JSON.stringify(results));
-  res.json({ "_id":userId, "username":username, "log":newLog });
+  console.log("username ="+userdata.username+"our result =" + JSON.stringify(results));
+  res.json({ "_id":userId, "username":userdata.username, "log":newLog });
   
   //res.json({"_id":results[0].id,"username":results[0].username,"count":fltr.length,"log":fltr})
 
