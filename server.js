@@ -455,11 +455,12 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   
   var { userId, from, to, limit } = req.query; // load userName in URL query ?userN=tara
   var key;
-  
+  var output;
 
   console.log("from and to :"+from, to);
   if(from){          // convert String to date
-    var From=new Date(from);    
+    var From=new Date(from); 
+    console.log(From.getTime());
     if (isNaN(From.getTime())) {  // d.valueOf() could also work
       console.log("from date is not valid enter date yyyy-mm-dd");
       // date is not valid
@@ -495,8 +496,9 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     exerciseArray=Object.entries(exerciseObject); 
     exerciseArray=exerciseArray[0][1];
     key=Object.keys(exerciseObject[0].log[0]);
-    console.log("Line 472 extracted exercise array finally  "+JSON.stringify(exerciseObject)+ "and [] is" +JSON.stringify(exerciseArray));
-    console.log("Line 473 extracted date finally! " +JSON.stringify(exerciseObject[0].log[0].date));
+    output=exerciseObject[0].log+exerciseObject[0].username;
+    console.log("Line 472 extracted exercise array "+JSON.stringify(exerciseObject[0].log)+exerciseObject[0].username +" :)");
+    console.log("Line 473 extracted date " +JSON.stringify(exerciseObject[0].log[0].log.date));
 
     console.log("Line 475 log count is " +JSON.stringify(exerciseObject[0].count));
 //    exerciseArray[0][0].shift();
@@ -504,7 +506,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     console.log("Line 476 keys in Arr[0].log keys are: " +key);
      //exerciseArray=exerciseArray[1];  // eliminate first item(err=null)
     //exerciseArray=Object.entries(exerciseArray);
-    console.log("line 477 "+" Access items in exerciseArray like description ect "+JSON.stringify(exerciseArray.log[0].description));// +exerciseObject.toString());
+    console.log("line 477 "+" Access items like description ect "+JSON.stringify(exerciseObject[0].log[0]));// +exerciseObject.toString());
     // we have already selected userId logs so this is redundant:
     // var result=exerciseArray.filter((doc)=>{
     //   return doc.id==userId;
@@ -563,8 +565,8 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       // if no parameters set, return all docs for user
       console.log("line 560 sending exerciseObject");
       
-      return res.json({
-        exerciseObject
+      return res.send({
+        output
       });
     //}else{
      // res.send("no dice exerciseArray is empty"+exerciseArray);
@@ -581,7 +583,8 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     //let counter = exerciseArray[0].length;
     console.log("line 558 "+exerciseObject[0].log.length+" is arrayLength, and compare to date: " + to);
     for (var i=0; i<exerciseObject[0].log.length; i++) {
-      let docDate = new Date(exerciseObject[0].log[i].date);
+      let docDate = new Date(exerciseObject[0].log[i].log.date);
+      //exerciseObject[0].log[0].log.date
       console.log(
         To +
           To.getTime() +
@@ -592,7 +595,8 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       if (To.getTime() < docDate.getTime()) {
         // if date is after 'to', delete that element
         exerciseObject[0].log.splice(i, 1);
-         console.log("570 it worked item deleted");
+        exerciseObject[0].count--;
+         console.log("570 it worked item deleted"+exerciseObject[0].count);
         i--; // because we deleted this index next one slide here
         //}
       }
@@ -605,23 +609,25 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     }
     let logCount=exerciseObject[0].log.length;
     console.log("line 582 log Count is "+logCount)
+   
 //    let tempArray = exerciseArray.filter(log => {
     for (var i=0; i<(exerciseObject[0].log.length); i++) {
       
-      let docDate = new Date(exerciseObject[0].log[i].date);
+      let docDate = new Date(exerciseObject[0].log[i].log.date);
       //console.log("line 587 "+docDate);
       // exerciseArray.filter(log=>{
        if (From.getTime() > docDate.getTime()) {
     //     return log;
          let deletedItem=exerciseObject[0].log.splice(i, 1);
 //         exerciseObject[0].log.shift();//this will delete first element
-         console.log(From+" is 'from' Date so deleted element "+JSON.stringify(deletedItem)+" count is now "+exerciseObject[0].log.length);//+exerciseObject[0].log.length);
+         exerciseObject[0].count--;
+         console.log(From+" is 'from' Date so deleted element "+JSON.stringify(deletedItem)+" count is now "+exerciseObject[0].count);//+exerciseObject[0].log.length);
        }
     }
      //});
 //    for( var z=0; z<exerciseArray.log.length; z++){
 //    let logDate = new Date(exerciseArray.log[z].date);
-      console.log("line 598  Done");
+      console.log("line 598  Done.  Log count is "+JSON.stringify(exerciseObject[0].count));
 //      if (From.getTime() > logDate.getTime()) {
 //        exerciseArray.splice(z,1);//this will delete this element
 //        if(z>0){ //set counter back if we pull item out of array
