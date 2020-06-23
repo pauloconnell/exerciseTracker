@@ -213,22 +213,27 @@ async function saveThisHasAllLogsForUser(exerciseModel, done){      //called at 
 // function to save exercise log in existing DB document- called at line...241 and line 323
 async function saveExercise(log, done) {
   var returnMe;
-  console.log("at line 202 id is "+log.id);
+  console.log("at line 216 id is "+log.id);
     
   await exerciselogs.findOne(
-  { id: log.id},
-  function(err, results){
+  { "id": log.id},
+  async function(err, results){
      if (err) {
             console.log(err);
             done(err);
             } else {
-              console.log(JSON.stringify(results.log));
+              
               results.count++;  //increments counter
+              //log=log[0];
+              console.log("line 228"+JSON.stringify(log));
               results.log.push({
-                    log
-                });
+                id: log.id,
+                description: log.description,
+                duration: log.duration,
+                date: log.date
+              });
                 results.save().then((result) => {
-                    console.log("line 228 "+result);
+                    console.log("save completed at line 228 "+result);
                     done(null, result);
                 }).catch((err) => {
                     console.log(err);
@@ -382,38 +387,20 @@ app.post("/api/exercise/add", async function(req, res) {
     // use the Unary Opperator to covert type to Number
     return res.send("please enter proper duration in minutes ");
   } else duration = parseInt(duration);
-  console.log("line 377 duration is type :" + typeof duration);
+  console.log("line 390 duration is type :" + typeof duration);
   if (!date || date == "") {
     date = new Date(); // if no date make now the new date
   }
   date = date.toString();
     
-  let newLog = {
+  var newLog = {
     //update to match format
     id: userId,
     description: req.body.description,
-    duration: parseFloat(req.body.duration),
+    duration: duration,
     date: date
   };
 
-  await saveExercise(newLog, async function(err,result){      //defined at line 205
-    if(err) console.log(err);
-    else{
-     console.log("success at 395 ");//+result.toString());    // result of save not needed
-     results=result;
-      console.log("line 399"+results)
-    }
-  });      //saveExercise @ line 129
-  
-      //console.log("line 343 " +results);
-    
-                
-    try {
-      console.log("Saved log for "+ userId + results+ " are results @ line 404");
-    } catch (err) {
-      console.log(err);
-    }
-  
  await getUserName(userId, async function(err, data){    //defined at line 148
    if(err){
      console.log("line 417 Error "+err);
@@ -422,12 +409,31 @@ app.post("/api/exercise/add", async function(req, res) {
      console.log(" line 420 name..."+data); 
      userdata=data[0];
    }
-   console.log("Line 402 username is "+userdata.username);
+   //console.log("typeOf duration is "+typeof(newLog.duration));
+   console.log("Line 413 username is "+userdata.username);
  });
+  
+  await saveExercise(newLog, async function(err,result){      //defined at line 205
+    if(err) console.log(err);
+    else{
+     console.log("success at 395 ");//+result.toString());    // result of save not needed
+     results=result;
+      console.log("line 399"+JSON.stringify(results.log));
+      
+      res.json({ "_id":userId, "username":userdata.username, "log":newLog});
+    }
+  });      //saveExercise @ line 129
+  
+      //console.log("line 343 " +results);
+    
+                
+   
+  
+
 
 
   console.log("username ="+userdata.username+"our result =" + JSON.stringify(results));
-  res.json({ "_id":userId, "username":userdata.username, "log":newLog });
+ // res.json({ "_id":userId, "username":userdata.username, results });
   
   //res.json({"_id":results[0].id,"username":results[0].username,"count":fltr.length,"log":fltr})
 
