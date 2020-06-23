@@ -233,7 +233,7 @@ async function saveExercise(log, done) {
                 date: log.date
               });
                 results.save().then((result) => {
-                    console.log("save completed at line 228 "+result);
+                    console.log("save completed at line 236 "+result);
                     done(null, result);
                 }).catch((err) => {
                     console.log(err);
@@ -420,7 +420,7 @@ app.post("/api/exercise/add", async function(req, res) {
      results=result;
       console.log("line 399"+JSON.stringify(results.log));
       
-      res.json({ "_id":userId, "username":userdata.username, "log":newLog});
+      res.json({ "_id":userId, "username":userdata.username, "date":newLog.date, "duration":newLog.duration, "description":newLog.description  });
     }
   });      //saveExercise @ line 129
   
@@ -432,7 +432,7 @@ app.post("/api/exercise/add", async function(req, res) {
 
 
 
-  console.log("username ="+userdata.username+"our result =" + JSON.stringify(results));
+  //console.log("username ="+userdata.username+"our result =" + JSON.stringify(results));
  // res.json({ "_id":userId, "username":userdata.username, results });
   
   //res.json({"_id":results[0].id,"username":results[0].username,"count":fltr.length,"log":fltr})
@@ -492,23 +492,25 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
           console.log("warning - docs=null");
         }
         exerciseObject=docs; //Object.entries(docs[1]);
-        console.log("465 docs are found # of logs is "+exerciseObject[0].log.length+"confirmed and is type "+typeof(exerciseObject));//+JSON.stringify(exerciseArray));
+        console.log("495 docs are found # of logs is "+exerciseObject[0].log.length+"confirmed and is type "+typeof(exerciseObject));//+JSON.stringify(exerciseArray));
         
         //return res.json({ docs}); // if no id, display all logs) 
       }
     });
   if (userId==null) {
-    console.log("471 userId is null");
+    console.log("501 userId is null");
   }
   else{    // below skipped if no userId
     exerciseArray=Object.entries(exerciseObject); 
     exerciseArray=exerciseArray[0][1];
     key=Object.keys(exerciseObject[0].log[0]);
     output=exerciseObject[0].log+exerciseObject[0].username;
-    console.log("Line 472 extracted exercise array "+JSON.stringify(exerciseObject[0].log)+exerciseObject[0].username +" :)");
-    console.log("Line 473 extracted date " +JSON.stringify(exerciseObject[0].log[0].log.date));
+    let logCount=exerciseObject[0].count;
+    console.log("Line 475 log count is " +logCount);//JSON.stringify(exerciseObject[0].count));
+    console.log("Line 508 extracted exercise array "+JSON.stringify(exerciseObject[0].log)+exerciseObject[0].username +" :)");
+    console.log("Line 509 extracted date " +JSON.stringify(exerciseObject[0].log.log.date));
 
-    console.log("Line 475 log count is " +JSON.stringify(exerciseObject[0].count));
+   
 //    exerciseArray[0][0].shift();
     //exerciseArray=Object.entries(exerciseArray[0]);
     console.log("Line 476 keys in Arr[0].log keys are: " +key);
