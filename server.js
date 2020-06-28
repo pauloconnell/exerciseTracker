@@ -162,8 +162,8 @@ async function getUserLog(id, done) {
     });
   } // if id:null closed
   else {
-    console.log("165 id = " + id);
-    await exerciselogs.find({ id: id }, async function(err, data) {
+    //console.log("165 id = " + id);
+    await exerciselogs.find({ "id": id }, async function(err, data) {
       // was not retrieving any docs, so will filter by id later
       if (err) {
         console.log(err);
@@ -335,7 +335,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
           console.log(err + "@line 322");
         }
         if (result) {
-          console.log(user + "saved at line 325" + result);
+          console.log("saved at line 325" + result);
         }
       });
     } catch (err) {
@@ -414,16 +414,16 @@ app.post("/api/exercise/add", async function(req, res) {
       userdata = data[0];
     }
     //console.log("typeOf duration is "+typeof(newLog.duration));
-    console.log("Line 413 username is " + userdata.username);
+    console.log("Line 417 username is " + userdata.username);
   });
 
   await saveExercise(newLog, async function(err, result) {
     //defined at line 205
     if (err) console.log(err);
     else {
-      console.log("success at 395 "); //+result.toString());    // result of save not needed
+      console.log("success at 424 "); //+result.toString());    // result of save not needed
       results = result;
-      console.log("line 399" + JSON.stringify(results.log));
+      console.log("line 426" + JSON.stringify(results.log));
 
       res.json({
         _id: userId,
@@ -470,7 +470,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   var output;
   let theUserName;
 
-  console.log("from and to :" + from, to);
+  console.log("Line 473 from and to :" + from, to);
   if (from) {
     // convert String to date
     var From = new Date(from);
@@ -491,8 +491,9 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       to = null;
     }
   }
+  
   let logCount = 0;
-  console.log("userId =" + userId);
+  console.log("line 495 userId =" + userId);
   await getUserLog(userId, async function(err, docs) {
     // defined at line 151 and can handle userId=null if so
     if (err) return res.send("error getting documents");
@@ -517,16 +518,16 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   } else {
     // below skipped if no userId
     exerciseArray = Object.entries(exerciseObject);
-    console.log("exercise ARRAY is same as object"); //+JSON.stringify(exerciseArray));
+    console.log("exercise ARRAY is same as object "+exerciseObject[0].username); //+JSON.stringify(exerciseArray));
     //didn't seem to be able to extract an array, using original object
     //key=Object.keys(exerciseObject[0].log[0]);
-    theUserName = exerciseObject[0].username;
+    //theUserName = exerciseObject[0].username;
     output = exerciseObject[0].log;
 
     let logCount = exerciseObject[0].count;
     console.log("Line 513 log count is " + logCount); //JSON.stringify(exerciseObject[0].count));
     //console.log("Line 508 extracted exercise array"+JSON.stringify(exerciseObject[0].log));
-    console.log(exerciseObject[0].username + " is our username :)");
+    console.log(exerciseObject[0].username + " is our username line 530 :)");
     //console.log("Line 509 extracted date " +JSON.stringify(exerciseObject[0].log.log.date));
 
     //    exerciseArray[0][0].shift();
