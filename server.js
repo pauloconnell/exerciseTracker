@@ -162,7 +162,7 @@ async function getUserLog(id, done) {
     });
   } // if id:null closed
   else {
-    console.log("175 id = " + id);
+    console.log("165 id = " + id);
     await exerciselogs.find({ id: id }, async function(err, data) {
       // was not retrieving any docs, so will filter by id later
       if (err) {
@@ -171,7 +171,7 @@ async function getUserLog(id, done) {
       }
       if (data) {
         //exerciseObject=data;
-        console.log("Line 178 got data ");
+        console.log("Line 178 got data "+data);
         return done(null, data);
       } else console.log("no data at line 181");
     });
