@@ -104,9 +104,10 @@ async function getUserId(username, done) {
 async function getAllUsers(done) {
   let userList = await exerciselogs.find({}, { id: 1, username: 1, _id: 0 });
   try {
-    console.log("line 107 userlist is "+ userList);
+    console.log("line 107 userlist keys are "+ userList[Object.keys(userList)[0]]);
    
-    console.log("line 103 userlist = " + JSON.stringify(userList[0]));
+   
+    console.log("line 113 userlist = " + JSON.stringify(userList[1]));
     //userList=Object.entries(userList)
     done(null, userList);
   } catch (err) {
@@ -166,13 +167,13 @@ async function getUserLog(id, done) {
   else {
     //console.log("165 id = " + id);
     await exerciselogs.find({ "id": id }, async function(err, data) {
-      // was not retrieving any docs, so will filter by id later
+      
       if (err) {
         console.log(err);
         done(err);
       }
       if (data) {
-        //exerciseObject=data;
+     
         console.log("Line 178 got data "+data);
         return done(null, data);
       } else console.log("no data at line 181");
@@ -504,10 +505,10 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       if (docs == null) {
         console.log("warning - docs=null");
       }
-      exerciseArray = docs[0];
+      //exerciseArray = docs[0];
       exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
       console.log(
-        "495 docs are found # of logs is " +
+        "510 docs are found # of logs is " +
           exerciseObject[0].log.length +
           "confirmed and is type " +
           typeof exerciseObject
@@ -517,12 +518,16 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     }
   });
   if (userId == null) {
-    console.log("501 userId is null");
+    console.log("521 userId is null");
   } else {
     // below skipped if no userId
     exerciseArray = Object.entries(exerciseObject);
-    console.log("exercise ARRAY is same as object "+exerciseObject[0].username); //+JSON.stringify(exerciseArray));
-    //didn't seem to be able to extract an array, using original object
+    try{
+      console.log("exercise ARRAY is same as object "+exerciseObject[0].username); //+JSON.stringify(exerciseArray));
+    }catch(err){
+      console.log("ERROR ERROR ERROR At line 527 "+err);
+    }
+      //didn't seem to be able to extract an array, using original object
     //key=Object.keys(exerciseObject[0].log[0]);
     //theUserName = exerciseObject[0].username;
     output = exerciseObject[0].log;
