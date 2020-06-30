@@ -413,20 +413,20 @@ app.post("/api/exercise/add", async function(req, res) {
     if (err) {
       console.log("line 417 Error " + err);
     } else {
-      console.log(" line 420 name..." + data);
+      console.log(" line 420 name: " + data.username);
       userdata = data[0];
     }
     //console.log("typeOf duration is "+typeof(newLog.duration));
-    console.log("Line 417 username is " + userdata.username);
+    console.log("Line 427 username is " + userdata.username);
   });
 
   await saveExercise(newLog, async function(err, result) {
     //defined at line 205
     if (err) console.log(err);
     else {
-      console.log("success at 424 "); //+result.toString());    // result of save not needed
+      console.log("success at 428 "); //+result.toString());    // result of save not needed
       results = result;
-      console.log("line 426" + JSON.stringify(results.log));
+      console.log("line 429" + JSON.stringify(results.log));
       //results=results.log;
       res.json({
         results
