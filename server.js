@@ -104,10 +104,10 @@ async function getUserId(username, done) {
 async function getAllUsers(done) {
   let userList = await exerciselogs.find({}, { id: 1, username: 1, _id: 0 });
   try {
-    console.log("line 107 userlist keys are "+ userList[Object.keys(userList)[0]]);
+    console.log("line 107 userlist found")//+ Object.keys(userList))=num; //userList[Object.keys(userList)[1]])=obj@[1];
    
    
-    console.log("line 113 userlist = " + JSON.stringify(userList[1]));
+    console.log("line 113 userlist 3rd element is= " + JSON.stringify(userList[3]));
     //userList=Object.entries(userList)
     done(null, userList);
   } catch (err) {
@@ -524,13 +524,14 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     exerciseArray = Object.entries(exerciseObject);
     try{
       console.log("exercise ARRAY is same as object "+exerciseObject[0].username); //+JSON.stringify(exerciseArray));
+      output = exerciseObject[0].log;
     }catch(err){
       console.log("ERROR ERROR ERROR At line 527 "+err);
     }
       //didn't seem to be able to extract an array, using original object
     //key=Object.keys(exerciseObject[0].log[0]);
     //theUserName = exerciseObject[0].username;
-    output = exerciseObject[0].log;
+    
 
     let logCount = exerciseObject[0].count;
     console.log("Line 513 log count is " + logCount); //JSON.stringify(exerciseObject[0].count));
