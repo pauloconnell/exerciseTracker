@@ -21,11 +21,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 //define our schemas and collections/models:
-const userSchema = new mongoose.Schema({
-  id: String,
-  username: String
-});
-const newUsers = mongoose.model("newusers", userSchema);
+//const userSchema = new mongoose.Schema({
+//  id: String,
+//  username: String
+//});
+//const newUsers = mongoose.model("newusers", userSchema);
 const exerciseSchema = new mongoose.Schema({
   username: String,
   id: String, // storing the string version _id as it comes into the API as a string
@@ -81,7 +81,7 @@ var existingUser = false;
 // get users id from username:
 async function getUserId(username, done) {
   existingUser = false;
-  await newUsers
+  await exerciselogs
     .findOne({ username: username }) //find existing, else it's new user })
     .exec()
     .then(docs => {
@@ -102,8 +102,13 @@ async function getUserId(username, done) {
 // function to get all users:       called at line 423
 
 async function getAllUsers(done) {
-  let userList = await newUsers.find({}, { id: 1, username: 1, _id: 0 });
+  let userList = await exerciselogs.find({}, { id: 1, username: 1, _id: 0 });
   try {
+    console.log("line 107 userlist is "+ userList);
+    userList.reduce(log=>{
+      console.log(log);
+      return log;
+    })
     console.log("line 103 userlist = " + JSON.stringify(userList));
     //userList=Object.entries(userList)
     done(null, userList);
@@ -117,7 +122,7 @@ async function getAllUsers(done) {
 
 async function getUserName(id, done) {
   var allUsers;
-  let thisUser = await newUsers.find({ id: id });
+  let thisUser = await exerciselogs.find({ id: id });
   //await getAllUsers((err, data)=>{
   //     if(err){
   //       console.log(err);
@@ -314,33 +319,33 @@ app.post("/api/exercise/new-user", async function(req, res) {
     //Object ID creation options:  using shortid.generate() = String
     //var _id= new mongoose.Types.ObjectId();  //creates our _id = ObjectId
 
-    var user = new newUsers({
-      id: shortid.generate(), //Auto Generate to avoid type conversions
-      username: username
-    });
+   // var user = new newUsers({
+  //   id: shortid.generate(); //Auto Generate to avoid type conversions
+   //   username: username
+   // });
 
     //    create the exercise file in the database to update with exercises
 
-    let exerciseModel = new exerciselogs({
+    const exerciseModel = new exerciselogs({
       username: username,
-      id: user.id,
+      id: shortid.generate(),
       count: 0,
       log: []
     });
 
     // Save our model and exercise logs to DB
-    try {
-      await saveUser(user, function(err, result) {
-        if (err) {
-          console.log(err + "@line 322");
-        }
-        if (result) {
-          console.log("saved at line 325" + result);
-        }
-      });
-    } catch (err) {
-      console.log(err);
-    }
+    // try {
+    //   await saveUser(user, function(err, result) {
+    //     if (err) {
+    //       console.log(err + "@line 322");
+    //     }
+    //     if (result) {
+    //       console.log("saved at line 325" + result);
+    //     }
+    //   });
+    // } catch (err) {
+    //   console.log(err);
+    // }
 
     try {
       await saveThisHasAllLogsForUser(exerciseModel, function(err, result) {
@@ -356,7 +361,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       return "error saving to data base" + err;
     }
 
-    return res.json({ username: req.body.username, _id: user.id });
+    return res.json({ username: req.body.username, _id: exerciseModel.id });
   }
 });
 
