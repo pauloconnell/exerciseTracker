@@ -431,11 +431,12 @@ app.post("/api/exercise/add", async function(req, res) {
       console.log("line 426" + JSON.stringify(results.log));
 
       res.json({
-        _id: userId,
-        username: userdata.username,
-        date: newLog.date,
-        duration: newLog.duration,
-        description: newLog.description
+        results
+        // _id: userId,
+        // username: userdata.username,
+        // date: newLog.date,
+        // duration: newLog.duration,
+        // description: newLog.description
       });
     }
   }); //saveExercise @ line 129
