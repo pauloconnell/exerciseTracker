@@ -158,7 +158,7 @@ async function getUserLog(id, done) {
         done(err);
       }
       if (data) {
-        console.log("line 161 found " + JSON.stringify(data));
+        console.log("line 161 found " + JSON.stringify(data.log));
         userLog = data;
         return done(null, userLog);
       } else console.log("no data at line 168" + data);
