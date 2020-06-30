@@ -105,11 +105,8 @@ async function getAllUsers(done) {
   let userList = await exerciselogs.find({}, { id: 1, username: 1, _id: 0 });
   try {
     console.log("line 107 userlist is "+ userList);
-    userList.reduce(log=>{
-      console.log(log);
-      return log;
-    })
-    console.log("line 103 userlist = " + JSON.stringify(userList));
+   
+    console.log("line 103 userlist = " + JSON.stringify(userList[0]));
     //userList=Object.entries(userList)
     done(null, userList);
   } catch (err) {
@@ -429,7 +426,7 @@ app.post("/api/exercise/add", async function(req, res) {
       console.log("success at 424 "); //+result.toString());    // result of save not needed
       results = result;
       console.log("line 426" + JSON.stringify(results.log));
-
+      //results=results.log;
       res.json({
         results
         // _id: userId,
