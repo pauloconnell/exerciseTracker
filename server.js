@@ -497,6 +497,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       try{
         console.log("exercise ARRAY is same as object "+exerciseObject[0].username); //+JSON.stringify(exerciseArray));
         output = exerciseObject[0].log;
+        logCount = exerciseObject[0].count;
       }catch(err){
         console.log("ERROR ERROR ERROR At line 527 "+err);
       }
@@ -509,7 +510,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     //theUserName = exerciseObject[0].username;
     
 
-    let logCount = exerciseObject[0].count;
+    
     console.log("Line 513 log count is " + logCount); //JSON.stringify(exerciseObject[0].count));
     //console.log("Line 508 extracted exercise array"+JSON.stringify(exerciseObject[0].log));
     console.log(exerciseObject[0].username + " is our username line 530 :)");
