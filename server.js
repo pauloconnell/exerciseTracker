@@ -20,12 +20,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-//define our schemas and collections/models:
-//const userSchema = new mongoose.Schema({
-//  id: String,
-//  username: String
-//});
-//const newUsers = mongoose.model("newusers", userSchema);
+
 const exerciseSchema = new mongoose.Schema({
   username: String,
   id: String, // storing the string version _id as it comes into the API as a string
@@ -36,7 +31,7 @@ const exerciselogs = mongoose.model("exerciselogs", exerciseSchema);
 console.log(mongoose.connection.readyState);
 
 //add static file - style.css
-//app.use("/public", express.static(process.cwd() + "/public"));   isn't working with /public route
+//app.use("/public", express.static(process.cwd() + "/public"));   //isn't working with /public route
 app.use(express.static(process.cwd() + "/public"));
 //define our routes
 app.get("/", (req, res) => {
@@ -71,7 +66,7 @@ app.use((err, req, res, next) => {
 var username;
 var existingUser = false;
 
-//define some functions to access the DB that are available to all API endpoints
+//Should be in model/index.js define some functions to access the DB that are available to all API endpoints
 // getUserID(username)
 //getAllUsers
 // getUserName(id)
@@ -81,16 +76,18 @@ var existingUser = false;
 // get users id from username:
 async function getUserId(username, done) {
   existingUser = false;
+  let ourId;
   await exerciselogs
     .findOne({ username: username }) //find existing, else it's new user })
     .exec()
     .then(docs => {
       if (docs) {
         existingUser = true;
+        ourId=docs.id;
         console.log(
-          "line 88 Existing user " + docs.username + "FOUND " + docs.id
+          "line 88 Existing user " + docs.username + "FOUND " + ourId
         );
-        done(null, docs.id);
+        done(null, ourId);
       } else console.log("no docs found for " + username);
     })
     .catch(err => {
@@ -104,44 +101,21 @@ async function getUserId(username, done) {
 async function getAllUsers(done) {
   let userList = await exerciselogs.find({}, { id: 1, username: 1, _id: 0 });
   try {
-    console.log("line 107 userlist found")//+ Object.keys(userList))=num; //userList[Object.keys(userList)[1]])=obj@[1];
-   
-   
+    console.log("line 107 userlist found")//+ Object.keys(userList))=num; //userList[Object.keys(userList)[1]])=obj@[1];  
     console.log("line 113 userlist 3rd element is= " + JSON.stringify(userList[3]));
-    //userList=Object.entries(userList)
     done(null, userList);
   } catch (err) {
     console.log(err);
     done(err);
   }
 }
-
 // get username from userId
-
 async function getUserName(id, done) {
-  var allUsers;
+  
   let thisUser = await exerciselogs.find({ id: id });
-  //await getAllUsers((err, data)=>{
-  //     if(err){
-  //       console.log(err);
-  //       done(err);
-  //     }
-  //     else{
-  //       allUsers=data;
-  //       done(null, data);
+  console.log("line 137 " + JSON.stringify(thisUser.username));
 
-  //     }
-  //   });
-  console.log("line 137 " + JSON.stringify(thisUser));
-
-  // for(var a; a<allUsers.length; a++) {
-  //   console.log("allUsers[a] is "+allUsers[a]);
-  //     if (allUsers[a].id == id) {
-  //         username=allUsers[a].username;
-  //         console.log("line 146 "+allUsers[a]);
-  //     }
-  // }
-  done(null, thisUser);
+  done(null, thisUser.username);
 }
 
 // function to find all users logs
@@ -206,20 +180,18 @@ async function saveThisHasAllLogsForUser(exerciseModel, done) {
   }
 }
 // function to save exercise log in existing DB document- called at line...241 and line 323
-async function saveExercise(log, done) {
+async function saveExercise(userId, log, done) {
   var returnMe;
-  console.log("at line 216 id is " + log.id);
+  console.log("at line 216 id is " + log);
 
-  await exerciselogs.findOne({ id: log.id }, async function(err, results) {
+  await exerciselogs.findOne({ id: userId }, async function(err, results) {
     if (err) {
       console.log(err);
       done(err);
     } else {
       results.count++; //increments counter
-      //log=log[0];
       console.log("line 228" + JSON.stringify(log));
       results.log.push({
-        id: log.id,
         description: log.description,
         duration: log.duration,
         date: log.date
@@ -374,7 +346,7 @@ app.get("/api/exercise/users/", async function(req, res) {
 
 // this is where the exercise is logged
 app.post("/api/exercise/add", async function(req, res) {
-  var userdata;
+  var userData;
   var results;
   var classDate;
   var dateString;
@@ -401,35 +373,33 @@ app.post("/api/exercise/add", async function(req, res) {
   //dateString = date.toString();
   console.log("this should be a string " + dateString);
   var newLog = {
-    //update to match format
-    id: userId,
     description: req.body.description,
     duration: duration,
     date: dateString
   };
 
-  await getUserName(userId, async function(err, data) {
+  await getUserName(userId, async function(err, username) {
     //defined at line 148
     if (err) {
       console.log("line 417 Error " + err);
     } else {
-      console.log(" line 420 name: " + data.username);
-      userdata = data[0];
+      console.log(" line 420 name: " + username);
+      userData=username;  
     }
     //console.log("typeOf duration is "+typeof(newLog.duration));
-    console.log("Line 427 username is " + userdata.username);
+    console.log("Line 427 username is " +username);
   });
 
-  await saveExercise(newLog, async function(err, result) {
+  await saveExercise(userId, newLog, async function(err, result) {
     //defined at line 205
     if (err) console.log(err);
     else {
       console.log("success at 428 "); //+result.toString());    // result of save not needed
       results = result;
       console.log("line 429" + JSON.stringify(results.log));
-      //results=results.log;
-      res.json({
-        results
+      results=JSON.stringify(result);
+      res.send({
+        result
         // _id: userId,
         // username: userdata.username,
         // date: newLog.date,
