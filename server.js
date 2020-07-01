@@ -507,13 +507,14 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       }
       //exerciseArray = docs[0];
       exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
+      count=exerciseObject[0].log.length;
       console.log(
         "510 docs are found # of logs is " +
-          exerciseObject[0].log.length +
+          count +
           "confirmed and is type " +
           typeof exerciseObject
       ); //+JSON.stringify(exerciseArray));
-
+      
       //return res.json({ docs}); // if no id, display all logs)
     }
   });
@@ -522,12 +523,17 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   } else {
     // below skipped if no userId
     exerciseArray = Object.entries(exerciseObject);
-    try{
-      console.log("exercise ARRAY is same as object "+exerciseObject[0].username); //+JSON.stringify(exerciseArray));
-      output = exerciseObject[0].log;
-    }catch(err){
-      console.log("ERROR ERROR ERROR At line 527 "+err);
+    if(count>0){
+      try{
+        console.log("exercise ARRAY is same as object "+exerciseObject[0].username); //+JSON.stringify(exerciseArray));
+        output = exerciseObject[0].log;
+      }catch(err){
+        console.log("ERROR ERROR ERROR At line 527 "+err);
+      }
     }
+    else{
+      console.log("no entries in this userObject yet ");
+    } 
       //didn't seem to be able to extract an array, using original object
     //key=Object.keys(exerciseObject[0].log[0]);
     //theUserName = exerciseObject[0].username;
@@ -570,7 +576,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     // }
     //exerciseArray=newArray;
     //console.log("469 check"+newArray);
-  }
+  }    // this ends the elseif handling defined user
   //}
   //   else{ //if (userId) {
   //     console.log("look up userId ="+userId);
@@ -606,8 +612,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     //if (exerciseArray != "") {
     // if no parameters set, return all docs for user
     console.log("line 580 sending exerciseObject");
-    let output2 = JSON.stringify(output);
-
+    
     //return res.json({      //handeled together now
     // output
     //});
