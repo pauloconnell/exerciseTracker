@@ -444,7 +444,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   var output;
   let theUserName;
 
-  console.log("Line 473 from and to :" + from, to);
+  console.log(req+"Line 473 from and to :" + from, to);
   if (from) {
     // convert String to date
     var From = new Date(from);
@@ -479,7 +479,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
       count=exerciseObject[0].log.length;
       console.log(
-        "510 docs are found # of logs is " +
+        "480 docs are found # of logs is " +
           count +
           "confirmed and is type " +
           typeof exerciseObject
@@ -488,7 +488,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       //return res.json({ docs}); // if no id, display all logs)
     }
   });
-  if (userId == null) {
+  if (userId == null || userId == 0) {
     console.log("521 userId is null");
   } else {
     // below skipped if no userId
@@ -499,11 +499,11 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
         output = exerciseObject[0].log;
         logCount = exerciseObject[0].count;
       }catch(err){
-        console.log("ERROR ERROR ERROR At line 527 "+err);
+        console.log("ERROR ERROR ERROR At line 502 "+err);
       }
     }
     else{
-      console.log("no entries in this userObject yet ");
+      console.log("line 506 no entries in this userObject yet ");
     } 
       //didn't seem to be able to extract an array, using original object
     //key=Object.keys(exerciseObject[0].log[0]);
@@ -511,7 +511,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     
 
     
-    console.log("Line 513 log count is " + logCount); //JSON.stringify(exerciseObject[0].count));
+    console.log(exerciseObject+"Line 513 log count is " + logCount); //JSON.stringify(exerciseObject[0].count));
     //console.log("Line 508 extracted exercise array"+JSON.stringify(exerciseObject[0].log));
     console.log(exerciseObject[0].username + " is our username line 530 :)");
     //console.log("Line 509 extracted date " +JSON.stringify(exerciseObject[0].log.log.date));
