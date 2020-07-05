@@ -170,13 +170,13 @@ async function saveExercise(userId, log, done) {
     { id: userId },
     {
       $push: {
-        log: log
+        exercise: log
       },
       $inc: {
         count: 1
       }
     },
-    { upsert: true, new: true, lean: true }, //done());
+    { upsert: true, new: true, lean: true, "fields": { "_id":0}}, //done());
     function(err, results) {
       if (err) {
         console.log("line 218" + err);
@@ -339,7 +339,11 @@ app.post("/api/exercise/add", async function(req, res) {
     date = new Date();
   }
   classDate = new Date(date);
-
+  if (!userId || !description || !duration) {
+    res.send(
+      "User ID, Description and Duration are required fields - please enter values..."
+    );
+  }
   // if (date.getTime !=date) {
   //   date = new Date(); // if no date make now the new date
   // }
@@ -499,7 +503,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     console.log(
       "line 524 " +
         " Access items like description : " +
-        JSON.stringify(exerciseObject[0].exercise[0].description)
+        JSON.stringify(exerciseObject[0].exercise[0])
     ); // +exerciseObject.toString());
     // we have already selected userId logs so this is redundant:
     // var result=exerciseArray.filter((doc)=>{
@@ -693,9 +697,9 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
         ", username:" +
         exerciseObject[0].username +
         ", " +
-      "count:" +
-        exerciseObject[0].count +
-        JSON.stringify(exerciseObject[0].exercise) 
+      "count:"  +
+        exerciseObject[0].count +", "+
+        exerciseObject[0].exercise 
         
     );
   }
