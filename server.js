@@ -24,7 +24,7 @@ const exerciseSchema = new mongoose.Schema({
   username: String,
   id: String, // storing the string version _id as it comes into the API as a string
   count: Number,
-  log: []
+  exercise: []
 });
 const exerciselogs = mongoose.model("exerciselogs", exerciseSchema);
 console.log(mongoose.connection.readyState);
@@ -443,17 +443,17 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   }
 
   let logCount = 0;
-  console.log("line 495 userId =" + userId);
+  console.log("line 445 userId =" + userId);
   await getUserLog(userId, async function(err, docs) {
     // defined at line 151 and can handle userId=null if so
     if (err) return res.send("error getting documents");
     else {
-      if (docs == null) {
+      if (docs == null||!docs) {
         console.log("warning - docs=null");
       }
       //exerciseArray = docs[0];
       exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
-      count = exerciseObject[0].log.length;
+      count = exerciseObject[0].exercise.length;
       console.log(
         "480 docs are found # of logs is " +
           count +
@@ -465,7 +465,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     }
   });
   if (userId == null || userId == 0) {
-    console.log("521 userId is null");
+    console.log("466 userId is null");
   } else {
     // below skipped if no userId
     exerciseArray = Object.entries(exerciseObject);
@@ -474,7 +474,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
         console.log(
           "exercise ARRAY is same as object " + exerciseObject[0].username
         ); //+JSON.stringify(exerciseArray));
-        output = exerciseObject[0].log;
+        output = exerciseObject[0].exercise;
         logCount = exerciseObject[0].count;
       } catch (err) {
         console.log("ERROR ERROR ERROR At line 502 " + err);
@@ -486,9 +486,9 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     //key=Object.keys(exerciseObject[0].log[0]);
     //theUserName = exerciseObject[0].username;
 
-    console.log(exerciseObject + "Line 513 log count is " + logCount); //JSON.stringify(exerciseObject[0].count));
+    console.log(JSON.stringify(exerciseObject) + "Line 489 log count is " + logCount); //JSON.stringify(exerciseObject[0].count));
     //console.log("Line 508 extracted exercise array"+JSON.stringify(exerciseObject[0].log));
-    console.log(exerciseObject[0].username + " is our username line 530 :)");
+    console.log(JSON.stringify(exerciseObject[0].username) + " is our username line 530 :)");
     //console.log("Line 509 extracted date " +JSON.stringify(exerciseObject[0].log.log.date));
 
     //    exerciseArray[0][0].shift();
@@ -499,7 +499,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     console.log(
       "line 524 " +
         " Access items like description : " +
-        JSON.stringify(exerciseObject[0].log[0].description)
+        JSON.stringify(exerciseObject[0].exercise[0].description)
     ); // +exerciseObject.toString());
     // we have already selected userId logs so this is redundant:
     // var result=exerciseArray.filter((doc)=>{
@@ -573,10 +573,10 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
   if (To) {
     //let toDate = new Date(to);
     //    if(new Date(element.date).toString()!=="Invalid Date"&& element.date){
-    var counter = exerciseObject[0].log.length;
+    var counter = exerciseObject[0].exercise.length;
     console.log(
       "line 612 " +
-        exerciseObject[0].log.length +
+        exerciseObject[0].exercise.length +
         " is arrayLength," +
         counter +
         " and compare to date: " +
@@ -594,9 +594,9 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
             "counter is " +
             counter +
             "date is " +
-            exerciseObject[0].log[i].date
+            exerciseObject[0].exercise[i].date
         );
-        docDate = new Date(exerciseObject[0].log[i].date);
+        docDate = new Date(exerciseObject[0].exercise[i].date);
         console.log("docDate is " + docDate);
         //exerciseObject[0].log[0].log.date
       } catch (err) {
@@ -608,7 +608,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
       if (docDate) {
         if (To.getTime() < docDate.getTime()) {
           // if date is after 'to', delete that element
-          exerciseObject[0].log.splice(i, 1);
+          exerciseObject[0].exercise.splice(i, 1);
 
           // delete exerciseObject[0].log[i];
           exerciseObject[0].count--;
@@ -635,8 +635,8 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     for (var i = 0; i < count; i++) {
       console.log(i + " is i and line 650 date is ");
       try {
-        console.log("try " + exerciseObject[0].log[i].date);
-        docDate = new Date(exerciseObject[0].log[i].date);
+        console.log("try " + exerciseObject[0].exercise[i].date);
+        docDate = new Date(exerciseObject[0].exercise[i].date);
       } catch (err) {
         console.log(err + " no data at i = " + i);
       }
@@ -645,7 +645,7 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
         // exerciseArray.filter(log=>{
         if (From.getTime() > docDate.getTime()) {
           console.log("found 1 to delete on " + docDate);
-          exerciseObject[0].log.splice(i, 1);
+          exerciseObject[0].exercise.splice(i, 1);
           //         exerciseObject[0].log.shift();//this will delete first element
           //delete exerciseObject[0].log[i];
           exerciseObject[0].count--;
@@ -679,9 +679,9 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
     //finalDocArray = tempArray;
   }
   if (limit) {
-    if (exerciseObject[0].log.length > limit) {
+    if (exerciseObject[0].exercise.length > limit) {
       console.log("trim results to meet limit " + limit);
-      exerciseObject[0].log.splice(limit);
+      exerciseObject[0].exercise.splice(limit);
     }
   }
   if (!userId) {
@@ -693,9 +693,10 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
         ", username:" +
         exerciseObject[0].username +
         ", " +
-        JSON.stringify(exerciseObject[0].log) +
-        "count:" +
-        exerciseObject[0].count
+      "count:" +
+        exerciseObject[0].count +
+        JSON.stringify(exerciseObject[0].exercise) 
+        
     );
   }
 });
