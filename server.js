@@ -378,8 +378,13 @@ app.post("/api/exercise/add", async function(req, res) {
       results = result;
       console.log("line 429" + JSON.stringify(results));
       results = JSON.stringify(result);
-      res.send({
-        result
+      res.json({
+        
+        username: result.username,
+        description: result.description,
+        duration: result.duration,
+        _id: result.id,
+        date: result.date
         // _id: userId,
         // username: userdata.username,
         // date: newLog.date,
