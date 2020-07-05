@@ -704,7 +704,8 @@ app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
         ", " +
       "count:"  +
         exerciseObject[0].count +", "+
-        exerciseObject[0].exercise 
+      "log:"+
+        JSON.stringify(exerciseObject[0].exercise) 
         
     );
   }
