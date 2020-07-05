@@ -318,7 +318,9 @@ app.get("/api/exercise/users/", async function(req, res) {
   });
 });
 
-// this is where the exercise is logged
+
+
+// this is where the exercise is logged 
 app.post("/api/exercise/add", async function(req, res) {
   var userData;
   var results;
