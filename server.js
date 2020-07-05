@@ -381,10 +381,10 @@ app.post("/api/exercise/add", async function(req, res) {
       res.json({
         
         username: result.username,
-        description: result.description,
-        duration: result.duration,
         _id: result.id,
-        date: result.date
+        description: newLog.description,
+        duration: newLog.duration,
+        date: newLog.date
         // _id: userId,
         // username: userdata.username,
         // date: newLog.date,
