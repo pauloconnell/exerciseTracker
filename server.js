@@ -186,7 +186,7 @@ async function saveExercise(userId, log, done) {
         console.log("line 218" + err);
         done(err);
       } else {
-        console.log("Line 220 " + JSON.stringify(results));
+        console.log("Line 220 " + JSON.stringify(results.username));
         returnMe = results;
         done(null, results);
       }
@@ -371,17 +371,17 @@ app.post("/api/exercise/add", async function(req, res) {
     date: dateString
   };
 
-  await getUserName(userId, async function(err, username) {
-    //defined at line 148
-    if (err) {
-      console.log("line 417 Error " + err);
-    } else {
-      console.log(" line 420 name: " + username);
-      userData = username;
-    }
-    //console.log("typeOf duration is "+typeof(newLog.duration));
-    console.log("Line 427 username is " + username);
-  });
+  // await getUserName(userId, async function(err, username) {
+  //   //defined at line 148
+  //   if (err) {
+  //     console.log("line 417 Error " + err);
+  //   } else {
+  //     console.log(" line 420 name: " + username);
+  //     userData = username;
+  //   }
+  //   //console.log("typeOf duration is "+typeof(newLog.duration));
+  //   console.log("Line 427 username is " + username);
+  // });
 
   await saveExercise(userId, newLog, async function(err, result) {
     //defined at line 205
@@ -390,20 +390,21 @@ app.post("/api/exercise/add", async function(req, res) {
       console.log("success at 428 "); //+result.toString());    // result of save not needed
       results = result;
       console.log("line 429" + JSON.stringify(results));
+      res.json(results);
       results = JSON.stringify(result);
-      res.json({
+//       res.json({
         
-        username: result.username,
-        _id: result.id,
-        description: newLog.description,
-        duration: newLog.duration,
-        date: newLog.date
-        // _id: userId,
-        // username: userdata.username,
-        // date: newLog.date,
-        // duration: newLog.duration,
-        // description: newLog.description
-      });
+//         username: result.username,
+//         _id: result.id,
+//         description: newLog.description,
+//         duration: newLog.duration,
+//         date: newLog.date
+//         // _id: userId,
+//         // username: userdata.username,
+//         // date: newLog.date,
+//         // duration: newLog.duration,
+//         // description: newLog.description
+//       });
     }
   }); //saveExercise @ line 129
 
