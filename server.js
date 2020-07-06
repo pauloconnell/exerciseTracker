@@ -116,9 +116,9 @@ async function getAllUsers(done) {
 // get username from userId
 async function getUserName(id, done) {
   let thisUser = await exerciselogs.find({ id: id });
-  console.log("line 137 " + JSON.stringify(thisUser.username));
+  console.log("line 137 " + (thisUser[0].username));
 
-  done(null, thisUser.username);
+  done(null, thisUser[0].username);
 }
 
 // function to find all users logs
@@ -168,7 +168,7 @@ async function saveThisHasAllLogsForUser(exerciseModel, done) {
 // function to save exercise log in existing DB document- called at line...241 and line 323
 async function saveExercise(userId, log, done) {
   var returnMe;
-  console.log("at line 216 id is " + log);
+  console.log("at line 216 id is not known until we get the response from the DB below");
 
   await exerciselogs.findOneAndUpdate(
     { id: userId },
@@ -332,6 +332,11 @@ app.post("/api/exercise/add", async function(req, res) {
   var dateString;
   var savedData = {}; // savedData will hold updated record from DB
   var { userId, description, duration, date } = req.body;
+  if (!userId || !description || !duration) {
+    res.send(
+      "User ID, Description and Duration are required fields - please enter values..."
+    );
+  }
   console.log("req.body is " + JSON.stringify(req.body));
   if (+duration == NaN) {
     // use the Unary Opperator to covert type to Number
