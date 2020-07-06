@@ -331,7 +331,12 @@ app.post("/api/exercise/add", async function(req, res) {
   var classDate;
   var dateString;
   var savedData = {}; // savedData will hold updated record from DB
-  var { userId, description, duration, date } = req.body;
+  var { userId, _id, description, duration, date } = req.body;
+  if(!userId){
+    if(_id){
+      userId=_id;
+    }
+  }
   if (!userId || !description || !duration) {
     res.send(
       "User ID, Description and Duration are required fields - please enter values..."
@@ -342,15 +347,14 @@ app.post("/api/exercise/add", async function(req, res) {
     // use the Unary Opperator to covert type to Number
     return res.send("please enter proper duration in minutes ");
   } else duration = parseInt(duration);
-  console.log("line 390 duration is type :" + typeof duration);
   console.log("Date is " + date);
   if (date == null || date == "") {
     date = new Date();
   }
   classDate = new Date(date);
   if (!userId || !description || !duration) {
-    res.send(
-      "User ID, Description and Duration are required fields - please enter values..."
+    return res.send(
+      "User ID, Description and Duration are required fields - please enter values...hit refresh to continue"
     );
   }
   // if (date.getTime !=date) {
@@ -429,15 +433,19 @@ app.post("/api/exercise/add", async function(req, res) {
 }); // closes this api endpoint
 
 //to get user logs  querry from url     ?userName=p_ollie
-app.get("/api/exercise/log/:userId?/:from?/:to?/:limit?", async function(
+app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   req,
   res
 ) {
-  var { userId, from, to, limit } = req.query; // load userName in URL query ?userN=tara
+  var { userId, _id, from, to, limit } = req.query; // load userName in URL query ?userN=tara
   //var key;
   var output;
   let theUserName;
-
+  if(!userId){
+    if(_id){
+      userId=_id;
+    }
+  }
   console.log(req + "Line 473 from and to :" + from, to);
   if (from) {
     // convert String to date
