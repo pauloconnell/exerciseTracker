@@ -24,7 +24,11 @@ const exerciseSchema = new mongoose.Schema({
   username: String,
   id: String, // storing the string version _id as it comes into the API as a string
   count: Number,
-  exercise: []
+  exercise: [{
+      description: String, 
+      duration: Number,
+      date: Date
+    }]
 });
 const exerciselogs = mongoose.model("exerciselogs", exerciseSchema);
 console.log(mongoose.connection.readyState);
