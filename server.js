@@ -275,7 +275,7 @@ app.post("/api/exercise/add", async function(req, res) {
   var { userId, _id, description, duration, date } = req.body;
   if(!userId){
     if(_id){
-      userId=_id;
+      userId=_id;    //covers both cases
     }
   }
   if (!userId || !description || !duration) {
@@ -285,7 +285,7 @@ app.post("/api/exercise/add", async function(req, res) {
   }
   console.log("req.body is " + JSON.stringify(req.body));
   if (+duration == NaN) {
-    // use the Unary Opperator to covert type to Number
+    // use the Unary Operator to covert type to Number
     return res.send("please enter proper duration in minutes ");
   } else duration = parseInt(duration);
   console.log("Date is " + date);
@@ -309,7 +309,7 @@ app.post("/api/exercise/add", async function(req, res) {
   var newLog = {
     description: req.body.description,
     duration: duration,
-    date: dateString
+    date: classDate
   };
 // check if we have this user 
   getUserName(userId, async function(err, result){
