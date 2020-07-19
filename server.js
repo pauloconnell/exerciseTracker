@@ -380,7 +380,6 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
 ) {
   var { userId, _id, from, to, limit } = req.query; // load userName in URL query ?userN=tara
   //var key;
-  let theUserName;
   if(!userId){
     if(_id){
       userId=_id;    // incase user sends wrong name
@@ -389,14 +388,14 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
 
   console.log(JSON.stringify(req.body) + "Line 473 from and to :" + from, to);
   if (from) {
-    // convert String to date
+    // convert String(input always type=string) to Date
     var From = new Date(from);
     console.log("from time is " + From.getTime());
     if (isNaN(From.getTime())) {
       // d.valueOf() could also work
       console.log("from date is not valid enter date yyyy-mm-dd");
       // date is not valid
-      from = null;
+      From = null;
     }
   }
   if (to) {
@@ -405,7 +404,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       // d.valueOf() could also work
       // date is not valid
       console.log("from date is not valid enter date yyyy-mm-dd");
-      to = null;
+      To = null;
     }
   }
   console.log("line 445 userId =" + userId);
@@ -438,9 +437,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       console.log("line 506 no entries in this userObject yet ");
     }
    
-    //console.log(JSON.stringify(exerciseObject) + "Line 489 log count is " + exerciseObject.count); //JSON.stringify(exerciseObject[0].count));
-    //console.log("Line 508 extracted exercise array"+JSON.stringify(exerciseObject[0].log));
-    console.log(JSON.stringify(exerciseObject[0].username) + " is our username line 530 :)");
+     console.log(JSON.stringify(exerciseObject[0].username) + " is our username line 530 :)");
     
     console.log(
       "line 524 " +
@@ -449,7 +446,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     ); 
     
   } // this ends the elseif handling defined user
-  if (!to && !from && !limit) {
+  if (!To && !From && !limit) {
     
   }
 
@@ -463,7 +460,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         " is arrayLength," +
         counter +
         " and compare to date: " +
-        to
+        To
     );
     //for (let logs in exerciseObject[0].log){
     //let docDate= new Date(logs.date);
@@ -529,9 +526,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         if (From.getTime() > docDate.getTime()) {
           console.log("found 1 to delete on " + docDate);
           exerciseObject[0].log.splice(i, 1);
-          //         exerciseObject[0].log.shift();//this will delete first element
-          //delete exerciseObject[0].log[i];
-          exerciseObject[0].count--;
+             exerciseObject[0].count--;
           count--; //because our exercise log list is now shorter
           i--; //this loop's counter reacts to deleted object
           console.log(
@@ -545,22 +540,10 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         }
       }
     }
-    //});
-    //    for( var z=0; z<exerciseArray.log.length; z++){
-    //    let logDate = new Date(exerciseArray.log[z].date);
     console.log(
       "line 668  Done.  Log count is " + JSON.stringify(exerciseObject[0].count)
     );
-    //      if (From.getTime() > logDate.getTime()) {
-    //        exerciseArray.splice(z,1);//this will delete this element
-    //        if(z>0){ //set counter back if we pull item out of array
-    //          z--;
-    //        }
-    //      } else return false;
-    //    }
-    //});
-    //finalDocArray = tempArray;
-  }
+   }
   if (limit) {
     if (exerciseObject[0].log.length > limit) {
       console.log("trim results to meet limit " + limit);
@@ -579,7 +562,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       "count:"  +
         exerciseObject[0].count +", "+
       "log:"+
-        JSON.stringify(exerciseObject[0]) 
+        JSON.stringify(exerciseObject[0].log) 
         
     );
   }
