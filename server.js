@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const shortid = require("shortid");
 var ourUserArray = []; // this will hold our users from DB
 var exerciseObject = {};
-var exerciseArray = []; // this will hold our info for 'this' user
+
 
 var finalDocArray = [];
 var ourUserName;
@@ -301,7 +301,7 @@ app.post("/api/exercise/add", async function(req, res) {
   var newLog = {
     description: req.body.description,
     duration: duration,
-    date: classDate
+    date: dateString
   };
 // check if we have this user 
   getUserName(userId, async function(err, result){
@@ -415,7 +415,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       if (docs == null||!docs) {
         console.log("warning - docs=null");
       }
-      //exerciseArray = docs[0];
+      
       exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
       count = exerciseObject[0].count;
       console.log(
@@ -423,7 +423,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
           count +
           "confirmed and is type " +
           typeof exerciseObject
-      ); //+JSON.stringify(exerciseArray));
+      ); 
 
       //return res.json({ docs}); // if no id, display all logs)
     }
@@ -432,12 +432,12 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     console.log("466 userId is null");
   } else {
     // below skipped if no userId
-    exerciseArray = Object.entries(exerciseObject);
+    
     if (count = 0) {
       console.log("line 506 no entries in this userObject yet ");
     }
    
-     console.log(JSON.stringify(exerciseObject[0].username) + " is our username line 530 :)");
+   //  console.log(JSON.stringify(exerciseObject[0].username) + " is our username line 530 :)");
     
     console.log(
       "line 524 " +
@@ -511,7 +511,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     var count = exerciseObject[0].count;
     console.log("line 644 log Count is " + count);
     let docDate = null;
-    //    let tempArray = exerciseArray.filter(log => {
+   
     for (var i = 0; i < count; i++) {
       console.log(i + " is i and line 650 date is ");
       try {
@@ -522,7 +522,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       }
       if (docDate) {
         console.log("line 660 " + docDate);
-        // exerciseArray.filter(log=>{
+        
         if (From.getTime() > docDate.getTime()) {
           console.log("found 1 to delete on " + docDate);
           exerciseObject[0].log.splice(i, 1);
