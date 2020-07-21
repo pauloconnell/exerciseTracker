@@ -30,7 +30,7 @@ const exerciseSchema = new mongoose.Schema({
       date: Date
     }]
 });
-const exerciselog = mongoose.model("exerciselog", exerciseSchema);
+const exerciselog = mongoose.model("newexerciselog", exerciseSchema);
 console.log(mongoose.connection.readyState);
 
 //add static file - style.css
