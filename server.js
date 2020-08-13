@@ -9,7 +9,6 @@ var exerciseObject = {};
 
 
 var finalDocArray = [];
-var ourUserName;
 mongoose.connect(process.env.DB_URI, {
   useNewUrlParser: true,
   useCreateIndex: true
@@ -30,7 +29,7 @@ const exerciseSchema = new mongoose.Schema({
       date: Date
     }]
 });
-const exerciselog = mongoose.model("newexerciselog", exerciseSchema);
+const exerciselog = mongoose.model("newexerciselogs", exerciseSchema);
 console.log(mongoose.connection.readyState);
 
 //add static file - style.css
@@ -115,8 +114,8 @@ async function getAllUsers(done) {
 }
 // get username from userId
 async function getUserName(id, done) {
-  let thisUser = await exerciselog.find({ id: id });
-  console.log("line 137 " + (thisUser[0].username));
+  let thisUser = await exerciselog.find({ "id": id });
+  console.log("line 137 " + (thisUser[0]));
 if(thisUser[0].username){
   done(null, thisUser[0].username);
 }
@@ -169,7 +168,6 @@ async function saveThisHasAllLogsForUser(exerciseModel, done) {
 }
 // function to save exercise log in existing DB document- called at line...241 and line 323
 async function saveExercise(userId, log, done) {
-  var returnMe;
   console.log("at line 216 id is not known until we get the response from the DB below");
 
   await exerciselog.findOneAndUpdate(
@@ -182,14 +180,14 @@ async function saveExercise(userId, log, done) {
         count: 1
       }
     },
-    { upsert: true, new: true, lean: true, "fields": { "_id":0}}, //done());
+    { upsert: true, new: true, lean: true, "fields": { "_id":0, "log._id":0}}, //done());
     function(err, results) {
       if (err) {
         console.log("line 218" + err);
         done(err);
       } else {
-        console.log("Line 220 " + JSON.stringify(results.username));
-        returnMe = results;
+        console.log("Line 220 " + JSON.stringify(results));
+        
         done(null, results);
       }
     }
@@ -218,9 +216,9 @@ app.post("/api/exercise/new-user", async function(req, res) {
       console.log(err);
       return res.send(err);
     }
-    if (existingUser) {    // was set in getUserId function
+    if (existingUser) {    // was set in getUserId function - REPLACE with 'result' does same thing
       console.log("line 293 found user " + result.toString());
-      res.json({ message: "username already taken" });
+      res.json({ message: "username already taken"+result.toString() });
       //return res.json({ exisitingUser: 'foundTrue', message:'If u are a new user please choose another username',  username: username, _id: result.toString()});
     }
   });
@@ -268,10 +266,8 @@ app.get("/api/exercise/users/", async function(req, res) {
 
 // this is where the exercise is logged 
 app.post("/api/exercise/add", async function(req, res) {
-  var userData;
   var classDate;
   var dateString;
-  var savedData = {}; // savedData will hold updated record from DB
   var { userId, _id, description, duration, date } = req.body;
   if(!userId){
     if(_id){
@@ -292,11 +288,8 @@ app.post("/api/exercise/add", async function(req, res) {
   if (date == null || date == "") {
     date = new Date();
   }
-  classDate = new Date(date);
-  
-  
+  classDate = new Date(date);  
   dateString = classDate.toString();
-
   console.log("this should be a string " + dateString);
   var newLog = {
     description: req.body.description,
@@ -307,14 +300,14 @@ app.post("/api/exercise/add", async function(req, res) {
   getUserName(userId, async function(err, result){
     if (err) console.log(err);
     else {
-       console.log("success at 318")
+       console.log("success at 308"+result);
        if (result) {
          username=result;
-         console.log(result +"Result at line 312");
+         console.log(result +"Result at line 307");
        }
         if (result==null) {    // this is set in the getUserName function
           username=userId;    // just use userId as username if user not in db -needed to pass tests
-          console.log("Schema creation at line 300");
+          console.log("Schema creation at line 310");
         
           //create new db for this new user 
           const exerciseModel = new exerciselog({
@@ -349,7 +342,7 @@ app.post("/api/exercise/add", async function(req, res) {
     //defined at line 205
     if (err) console.log(err);
     else {
-      console.log("success at 428 "); //+result.toString());    // result of save not needed
+      console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
       console.log("line 429 count is " + JSON.stringify(result.count));
       res.json(result);
      
