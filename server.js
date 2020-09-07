@@ -89,7 +89,10 @@ async function getUserId(username, done) {
           "line 88 Existing user " + docs.username + "FOUND " + ourId
         );
         done(null, ourId);
-      } else console.log("no docs found for " + username);
+      } else {
+        console.log("no docs found for " + username);
+        done(null, false);
+      }
     })
     .catch(err => {
       console.log(err + "Couldn't access database to check for user ID");
@@ -216,9 +219,9 @@ app.post("/api/exercise/new-user", async function(req, res) {
       console.log(err);
       return res.send(err);
     }
-    if (existingUser) {    // was set in getUserId function - REPLACE with 'result' does same thing
+    if (result) {    
       console.log("line 293 found user " + result.toString());
-      res.json({ message: "username already taken"+result.toString() });
+      res.json({ message: "username already taken id:"+result });
       //return res.json({ exisitingUser: 'foundTrue', message:'If u are a new user please choose another username',  username: username, _id: result.toString()});
     }
   });
