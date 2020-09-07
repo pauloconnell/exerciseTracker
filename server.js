@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const { body, validationResult } = require('express-validator');
 const cors = require("cors");
 const mongoose = require("mongoose");
 const shortid = require("shortid");
@@ -47,6 +48,7 @@ app.get("/", (req, res) => {
 // Error Handling middleware
 app.use((err, req, res, next) => {
   let errCode, errMessage;
+    res({error:err});
   if (err.errors) {
     // mongoose validation error
     errCode = 400; // bad request
@@ -54,6 +56,7 @@ app.use((err, req, res, next) => {
     // report the first validation error
     errMessage = err.errors[keys[0]].message;
   } else {
+    
     // generic or custom error
     errCode = err.status || 500;
     errMessage = err.message || "Internal Server Error";
@@ -88,7 +91,7 @@ async function getUserId(username, done) {
         console.log(
           "line 88 Existing user " + docs.username + "FOUND " + ourId
         );
-        done(null, ourId);
+        done(null, docs);
       } else {
         console.log("no docs found for " + username);
         done(null, false);
@@ -118,7 +121,7 @@ async function getAllUsers(done) {
 // get username from userId
 async function getUserName(id, done) {
   let thisUser = await exerciselog.find({ "id": id });
-  console.log("line 137 " + (thisUser[0]));
+  console.log("line 137 count is: " + (thisUser[0].count));
 if(thisUser[0].username){
   done(null, thisUser[0].username);
 }
@@ -133,7 +136,7 @@ async function getUserLog(id, done) {
   console.log("line 154 id is " + id);
   if (id == null) {
     console.log("id=null at line 156");
-    await exerciselog.find({}, { _id: 0 }, async function(err, data) {
+    await exerciselog.find({}, { _id:0 }, async function(err, data) {
       if (err) {
         console.log(err);
         done(err);
@@ -147,7 +150,7 @@ async function getUserLog(id, done) {
   } // if id:null closed
   else {
     //console.log("165 id = " + id); - console logs can cause server to restart so console.log No Bueno here
-    await exerciselog.find({ id: id }, async function(err, data) {
+    await exerciselog.find({ id: id }, {_id:0}, async function(err, data) {
       if (err) {
         console.log(err);
         done(err);
@@ -184,14 +187,14 @@ async function saveExercise(userId, log, done) {
       }
     },
     { upsert: true, new: true, lean: true, "fields": { "_id":0, "log._id":0}}, //done());
-    function(err, results) {
+    function(err, result) {
       if (err) {
         console.log("line 218" + err);
         done(err);
       } else {
-        console.log("Line 220 " + JSON.stringify(results));
+        console.log("Line 220 " + JSON.stringify(result.username));
         
-        done(null, results);
+        done(null, result);
       }
     }
   );
@@ -221,9 +224,10 @@ app.post("/api/exercise/new-user", async function(req, res) {
     }
     if (result) {    
       console.log("line 293 found user " + result.toString());
-      res.json({ message: "username already taken id:"+result });
+      res.json({ message: "username already taken id:"+result.id });
       //return res.json({ exisitingUser: 'foundTrue', message:'If u are a new user please choose another username',  username: username, _id: result.toString()});
     }
+    else existingUser=false;
   });
 
   
@@ -245,6 +249,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
         }
         if (result) {
           console.log(exerciseModel + "saved at line 358");
+          return res.json({username: result.username, _id: result.id});
         }
       }); //located at line 129
     } catch (err) {
@@ -252,7 +257,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       return "error saving to data base" + err;
     }
 
-    return res.json({ username: req.body.username, _id: exerciseModel.id });
+    //return res.json({ username: req.body.username, _id: exerciseModel.id });
   }
 });
 
@@ -268,9 +273,27 @@ app.get("/api/exercise/users/", async function(req, res) {
 
 
 // this is where the exercise is logged 
-app.post("/api/exercise/add", async function(req, res) {
+app.post("/api/exercise/add", [ 
+    body('date')
+      .trim()
+      .isISO8601()
+      .withMessage('Invalid date')
+      .isAfter(new Date(0).toJSON())
+      .isBefore(new Date('2999-12-31').toJSON())
+      .withMessage("Invalid Date")
+
+    ], async function(req, res, next) {
+  
+  // handle data validation errors:
+   const errors = validationResult(req.body.date)
+    if (!errors.isEmpty()) {
+      const { param, msg: message, } = errors.array()[0]
+      return next({ param, message })
+    }
+  
   var classDate;
   var dateString;
+  var username;
   var { userId, _id, description, duration, date } = req.body;
   if(!userId){
     if(_id){
@@ -294,6 +317,7 @@ app.post("/api/exercise/add", async function(req, res) {
   classDate = new Date(date);  
   dateString = classDate.toString();
   console.log("this should be a string " + dateString);
+  if(dateString=="Invalid Date") return res.send("invalid date - Please try again");
   var newLog = {
     description: req.body.description,
     duration: duration,
@@ -303,12 +327,12 @@ app.post("/api/exercise/add", async function(req, res) {
   getUserName(userId, async function(err, result){
     if (err) console.log(err);
     else {
-       console.log("success at 308"+result);
+      // console.log("success at 308"+result);
        if (result) {
          username=result;
-         console.log(result +"Result at line 307");
+      //   console.log(result +"Result at line 307");
        }
-        if (result==null) {    // this is set in the getUserName function
+        if (result==null) {    // ie. this userID doesn't exist yet  - to pass test, must handle this:
           username=userId;    // just use userId as username if user not in db -needed to pass tests
           console.log("Schema creation at line 310");
         
@@ -320,7 +344,7 @@ app.post("/api/exercise/add", async function(req, res) {
             log: []
           });
 
-    try {
+    try {      // creates new user as per tests explained above
       await saveThisHasAllLogsForUser(exerciseModel, function(err, result) {
         if (err) {
           console.log(err + "@line 335");
@@ -335,19 +359,19 @@ app.post("/api/exercise/add", async function(req, res) {
     }
       }    //end no user in db
     }
-  });
+  });  // got(or created) userName and file on DB 
   
 
   
   // add the exercise
 
   await saveExercise(userId, newLog, async function(err, result) {
-    //defined at line 205
+    //defined at line 173
     if (err) console.log(err);
     else {
       console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
       console.log("line 429 count is " + JSON.stringify(result.count));
-      res.json(result);
+      res.json({userName:result.username, description:result.log[result.count-1].description, duration:result.log[result.count-1].duration, date:result.log[result.count-1].date});
      
 //       res.json({
         
@@ -549,18 +573,19 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   if (!userId) {
     res.json(exerciseObject);
   } else {
-    res.send(
-      "_id:" +
-        exerciseObject[0].id +
-        ", username:" +
-        exerciseObject[0].username +
-        ", " +
-      "count:"  +
-        exerciseObject[0].count +", "+
-      "log:"+
-        JSON.stringify(exerciseObject[0].log) 
+    res.json(exerciseObject[0]);
+      //[
+//       "_id:" +
+//         exerciseObject[0].id +
+//         ", username:" +
+//         exerciseObject[0].username +
+//         ", " +
+//       "count:"  +
+//         exerciseObject[0].count +", "+
+//       "log:"+
+//         JSON.stringify(exerciseObject[0].log) 
         
-    );
+//     );
   }
 });
 
