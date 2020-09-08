@@ -20,14 +20,14 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const exerciseSchema = new mongoose.Schema({
+var exerciseSchema = new mongoose.Schema({
   username: String,
   id: String, // storing the string version _id as it comes into the API as a string
   count: Number,
-  log: [{
+  exercises: [{
       description: String, 
       duration: Number,
-      date: Date
+      date: Date,
     }]
 });
 const exerciselog = mongoose.model("newexerciselogs", exerciseSchema);
@@ -180,13 +180,13 @@ async function saveExercise(userId, log, done) {
     { id: userId },
     {
       $push: {
-        log: log
+        exercises: log
       },
       $inc: {
         count: 1
       }
     },
-    { upsert: true, new: true, lean: true, "fields": { "_id":0, "log._id":0}}, //done());
+    { upsert: true, new: true, lean: true, "fields": { "_id":0, "exercises._id":0}}, //done());
     function(err, result) {
       if (err) {
         console.log("line 218" + err);
@@ -239,7 +239,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
       username: username,
       id: shortid.generate(),
       count: 0,
-      log: []
+      exercises: []
     });
 
     try {
@@ -274,7 +274,7 @@ app.get("/api/exercise/users/", async function(req, res) {
 
 // this is where the exercise is logged 
 app.post("/api/exercise/add", [ 
-    body('date')
+    body('date')  //validate date (debugging)
       .trim()
       .isISO8601()
       .withMessage('Invalid date')
@@ -341,7 +341,7 @@ app.post("/api/exercise/add", [
             username: username,
             id: userId,
             count: 0,
-            log: []
+            exercises: []
           });
 
     try {      // creates new user as per tests explained above
@@ -370,8 +370,8 @@ app.post("/api/exercise/add", [
     if (err) console.log(err);
     else {
       console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
-      console.log("line 429 count is " + JSON.stringify(result.count));
-      res.json({userName:result.username, description:result.log[result.count-1].description, duration:result.log[result.count-1].duration, date:result.log[result.count-1].date});
+      console.log("line 429 count is " + JSON.stringify(result.exercises[1]));
+      res.json({userName:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, date:result.exercises[result.count-1].date});
      
 //       res.json({
         
@@ -462,7 +462,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     console.log(
       "line 524 " +
         " Access items like description : " +
-        JSON.stringify(exerciseObject[0].log[0])
+        JSON.stringify(exerciseObject[0].exercises[0])
     ); 
     
   } // this ends the elseif handling defined user
@@ -473,10 +473,10 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   if (To) {
     //let toDate = new Date(to);
     //    if(new Date(element.date).toString()!=="Invalid Date"&& element.date){
-    var counter = exerciseObject[0].log.length;
+    var counter = exerciseObject[0].exercises.length;
     console.log(
       "line 612 " +
-        exerciseObject[0].log.length +
+        exerciseObject[0].exercises.length +
         " is arrayLength," +
         counter +
         " and compare to date: " +
@@ -494,9 +494,9 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
             "counter is " +
             counter +
             "date is " +
-            exerciseObject[0].log[i].date
+            exerciseObject[0].exercises[i].date
         );
-        docDate = new Date(exerciseObject[0].log[i].date);
+        docDate = new Date(exerciseObject[0].exercises[i].date);
         console.log("docDate is " + docDate);
         //exerciseObject[0].log[0].log.date
       } catch (err) {
@@ -508,7 +508,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       if (docDate) {
         if (To.getTime() < docDate.getTime()) {
           // if date is after 'to', delete that element
-          exerciseObject[0].log.splice(i, 1);
+          exerciseObject[0].exercises.splice(i, 1);
 
           // delete exerciseObject[0].log[i];
           exerciseObject[0].count--;
@@ -535,8 +535,8 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     for (var i = 0; i < count; i++) {
       console.log(i + " is i and line 650 date is ");
       try {
-        console.log("try " + exerciseObject[0].log[i].date);
-        docDate = new Date(exerciseObject[0].log[i].date);
+        console.log("try " + exerciseObject[0].exercises[i].date);
+        docDate = new Date(exerciseObject[0].exercises[i].date);
       } catch (err) {
         console.log(err + " no data at i = " + i);
       }
@@ -545,7 +545,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         
         if (From.getTime() > docDate.getTime()) {
           console.log("found 1 to delete on " + docDate);
-          exerciseObject[0].log.splice(i, 1);
+          exerciseObject[0].exercises.splice(i, 1);
              exerciseObject[0].count--;
           count--; //because our exercise log list is now shorter
           i--; //this loop's counter reacts to deleted object
@@ -565,9 +565,9 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     );
    }
   if (limit) {
-    if (exerciseObject[0].log.length > limit) {
+    if (exerciseObject[0].exercises.length > limit) {
       console.log("trim results to meet limit " + limit);
-      exerciseObject[0].log.splice(limit);
+      exerciseObject[0].exercises.splice(limit);
     }
   }
   if (!userId) {
