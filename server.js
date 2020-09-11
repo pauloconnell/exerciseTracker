@@ -24,14 +24,16 @@ var exerciseSchema = new mongoose.Schema({
   username: String,
   id: String, // storing the string version _id as it comes into the API as a string
   count: Number,
+  
   exercises: [{
+      id: String,
       description: String, 
       duration: Number,
       date: Date,
     }]
 });
-const exerciselog = mongoose.model("newexerciselogs", exerciseSchema);
-console.log(mongoose.connection.readyState);
+const exerciselogDB = mongoose.model("exercisecollections", exerciseSchema);
+console.log("mongoose is: "+mongoose.connection.readyState);
 
 //add static file - style.css
 //app.use("/public", express.static(process.cwd() + "/public"));   //isn't working with /public route
@@ -81,7 +83,7 @@ var existingUser = false;
 async function getUserId(username, done) {
   existingUser = false;
   let ourId;
-  await exerciselog
+  await exerciselogDB
     .findOne({ username: username }) //find existing, else it's new user })
     .exec()
     .then(docs => {
@@ -106,7 +108,7 @@ async function getUserId(username, done) {
 // function to get all users:       called at line 423
 
 async function getAllUsers(done) {
-  let userList = await exerciselog.find({}, { id: 1, username: 1, _id: 0 });
+  let userList = await exerciselogDB.find({}, { id: 1, username: 1, _id: 0 });
   try {
     console.log("line 107 userlist found"); //+ Object.keys(userList))=num; //userList[Object.keys(userList)[1]])=obj@[1];
     console.log(
@@ -120,7 +122,7 @@ async function getAllUsers(done) {
 }
 // get username from userId
 async function getUserName(id, done) {
-  let thisUser = await exerciselog.find({ "id": id });
+  let thisUser = await exerciselogDB.find({ "id": id });
   console.log("line 137 count is: " + (thisUser[0].count));
 if(thisUser[0].username){
   done(null, thisUser[0].username);
@@ -134,9 +136,9 @@ async function getUserLog(id, done) {
   var userLog;
   var allUsers;
   console.log("line 154 id is " + id);
-  if (id == null) {
-    console.log("id=null at line 156");
-    await exerciselog.find({}, { _id:0 }, async function(err, data) {
+  if (id == null) {  // if no id querried, return all users
+    console.log("id=null at line 156");  
+    await exerciselogDB.find({}, { _id:0 }, async function(err, data) {
       if (err) {
         console.log(err);
         done(err);
@@ -149,8 +151,8 @@ async function getUserLog(id, done) {
     });
   } // if id:null closed
   else {
-    //console.log("165 id = " + id); - console logs can cause server to restart so console.log No Bueno here
-    await exerciselog.find({ id: id }, {_id:0}, async function(err, data) {
+    // else= we have id to search:
+    await exerciselogDB.find({ id: id }, {_id:0}, async function(err, data) {
       if (err) {
         console.log(err);
         done(err);
@@ -176,7 +178,7 @@ async function saveThisHasAllLogsForUser(exerciseModel, done) {
 async function saveExercise(userId, log, done) {
   console.log("at line 216 id is not known until we get the response from the DB below");
 
-  await exerciselog.findOneAndUpdate(
+  await exerciselogDB.findOneAndUpdate(
     { id: userId },
     {
       $push: {
@@ -186,7 +188,7 @@ async function saveExercise(userId, log, done) {
         count: 1
       }
     },
-    { upsert: true, new: true, lean: true, "fields": { "_id":0, "exercises._id":0}}, //done());
+    { new: true, lean: true, "fields": { "_id":0, "exercises._id":0}}, //done());
     function(err, result) {
       if (err) {
         console.log("line 218" + err);
@@ -235,7 +237,7 @@ app.post("/api/exercise/new-user", async function(req, res) {
   if (!existingUser) {
     console.log("Schema creation at line 300");
   
-    const exerciseModel = new exerciselog({
+    const exerciseModel = new exerciselogDB({
       username: username,
       id: shortid.generate(),
       count: 0,
@@ -319,7 +321,8 @@ app.post("/api/exercise/add", [
   console.log("this should be a string " + dateString);
   if(dateString=="Invalid Date") return res.send("invalid date - Please try again");
   var newLog = {
-    description: req.body.description,
+    id:  userId,
+    description: description,
     duration: duration,
     date: dateString
   };
@@ -337,7 +340,7 @@ app.post("/api/exercise/add", [
           console.log("Schema creation at line 310");
         
           //create new db for this new user 
-          const exerciseModel = new exerciselog({
+          const exerciseModel = new exerciselogDB({
             username: username,
             id: userId,
             count: 0,
@@ -370,8 +373,8 @@ app.post("/api/exercise/add", [
     if (err) console.log(err);
     else {
       console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
-      console.log("line 429 count is " + JSON.stringify(result.exercises[1]));
-      res.json({userName:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, date:result.exercises[result.count-1].date});
+      console.log("line 429 count is " + JSON.stringify(result));
+      res.json({_id:userId, userName:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, date:result.exercises[result.count-1].date});
      
 //       res.json({
         
@@ -398,12 +401,19 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   req,
   res
 ) {
-  var { userId, _id, from, to, limit } = req.query; // load userName in URL query ?userN=tara
+  var { userId, userid, id, _id, from, to, limit } = req.query; // load userName in URL query ?userN=tara
   //var key;
   if(!userId){
     if(_id){
       userId=_id;    // incase user sends wrong name
     }
+    if(id){
+      userId=id;
+    }
+    if(userid){
+      userId=userid;
+    }
+      
   }
 
   console.log(JSON.stringify(req.body) + "Line 473 from and to :" + from, to);
@@ -439,10 +449,8 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
       count = exerciseObject[0].count;
       console.log(
-        "480 docs are found # of logs is " +
-          count +
-          "confirmed and is type " +
-          typeof exerciseObject
+        "448 docs are found # of logs is " +
+          count 
       ); 
 
       //return res.json({ docs}); // if no id, display all logs)
