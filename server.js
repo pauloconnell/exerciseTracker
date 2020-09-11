@@ -374,7 +374,7 @@ app.post("/api/exercise/add", [
     else {
       console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
       console.log("line 429 count is " + JSON.stringify(result));
-      res.json({_id:userId, userName:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, date:result.exercises[result.count-1].date});
+      res.json({_id:userId, username:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, date:result.exercises[result.count-1].date});
      
 //       res.json({
         
