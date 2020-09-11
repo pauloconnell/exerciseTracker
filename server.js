@@ -178,30 +178,33 @@ async function saveThisHasAllLogsForUser(exerciseModel, done) {
 async function saveExercise(userId, log, done) {
   console.log("at line 216 id is not known until we get the response from the DB below");
 
-  await exerciselogDB.findOneAndUpdate(
-    { id: userId },
+  await exerciselogDB.findOne(
+    { id: userId }, (err,data)=>
     {
-      $push: {
-        exercises: log
-      },
-      $inc: {
-        count: 1
-      }
-    },
-    { new: true, lean: true, "fields": { "_id":0, "exercises._id":0}}, //done());
-    function(err, result) {
+    //   $push: {
+    //     exercises: log
+    //   },
+    //   $inc: {
+    //     count: 1
+    //   }
+    // },
+    // { new: true,  "fields": { "_id":0, "exercises._id":0}}, //done());
+  //function(err, result) {
       if (err) {
         console.log("line 218" + err);
         done(err);
-      } else {
-        console.log("Line 220 " + JSON.stringify(result.username));
-        
-        done(null, result);
       }
+      else {
+      //  console.log("Line 220 " + JSON.stringify(result.username));
+        data.exercises.push(log);
+        data.count++;
+        data.save((err, data)=>{
+          if (err) console.log("err at 204"+err);
+          return done(null, data);
+        });
     }
-  );
-
-  
+    }
+  );  
 }
 
 // recieves submit data for user name- db will return id to use for logging exercises
@@ -374,7 +377,7 @@ app.post("/api/exercise/add", [
     else {
       console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
       console.log("line 429 count is " + JSON.stringify(result));
-      res.json({_id:userId, username:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, date:result.exercises[result.count-1].date});
+      res.json({username:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, _id:userId, date:result.exercises[result.count-1].date});
      
 //       res.json({
         
