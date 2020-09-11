@@ -29,7 +29,7 @@ var exerciseSchema = new mongoose.Schema({
       id: String,
       description: String, 
       duration: Number,
-      date: Date,
+      date: String,
     }]
 });
 const exerciselogDB = mongoose.model("exercisecollections", exerciseSchema);
@@ -278,33 +278,13 @@ app.get("/api/exercise/users/", async function(req, res) {
 
 
 // this is where the exercise is logged 
-app.post("/api/exercise/add", [ 
-    body('date')  //validate date (debugging)
-      .trim()
-      .isISO8601()
-      .withMessage('Invalid date')
-      .isAfter(new Date(0).toJSON())
-      .isBefore(new Date('2999-12-31').toJSON())
-      .withMessage("Invalid Date")
-
-    ], async function(req, res, next) {
-  
-  // handle data validation errors:
-   const errors = validationResult(req.body.date)
-    if (!errors.isEmpty()) {
-      const { param, msg: message, } = errors.array()[0]
-      return next({ param, message })
-    }
+app.post("/api/exercise/add",  async function(req, res, next) {
   
   var classDate;
   var dateString;
   var username;
-  var { userId, _id, description, duration, date } = req.body;
-  if(!userId){
-    if(_id){
-      userId=_id;    //covers both cases
-    }
-  }
+  var { userId, description, duration, date } = req.body;
+  
   if (!userId || !description || !duration) {
     res.send(
       "User ID, Description and Duration are required fields - please enter values...hit refresh to continue"
@@ -321,6 +301,7 @@ app.post("/api/exercise/add", [
   }
   classDate = new Date(date);  
   dateString = classDate.toString();
+  
   console.log("this should be a string " + dateString);
   if(dateString=="Invalid Date") return res.send("invalid date - Please try again");
   var newLog = {
@@ -339,33 +320,11 @@ app.post("/api/exercise/add", [
       //   console.log(result +"Result at line 307");
        }
         if (result==null) {    // ie. this userID doesn't exist yet  - to pass test, must handle this:
-          username=userId;    // just use userId as username if user not in db -needed to pass tests
-          console.log("Schema creation at line 310");
-        
-          //create new db for this new user 
-          const exerciseModel = new exerciselogDB({
-            username: username,
-            id: userId,
-            count: 0,
-            exercises: []
-          });
+          return res.send("Please create profile before adding exercise log");           
 
-    try {      // creates new user as per tests explained above
-      await saveThisHasAllLogsForUser(exerciseModel, function(err, result) {
-        if (err) {
-          console.log(err + "@line 335");
-        }
-        if (result) {
-          console.log(exerciseModel + "saved at line 338"+result);
-        }
-      }); //located at line 129
-    } catch (err) {
-      console.log(err);
-      return "error saving to data base" + err;
+      
     }
-      }    //end no user in db
-    }
-  });  // got(or created) userName and file on DB 
+  }});  // got(or created) userName and file on DB 
   
 
   
@@ -377,21 +336,11 @@ app.post("/api/exercise/add", [
     else {
       console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
       console.log("line 429 count is " + JSON.stringify(result));
-      res.json({username:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, _id:userId, date:result.exercises[result.count-1].date});
+      
+     var dateString = result.exercises[result.count-1].date;  // cut time off the date
+      res.json({username:result.username, description:result.exercises[result.count-1].description, duration:result.exercises[result.count-1].duration, _id:userId, date:(dateString.substr(0,15))});
      
-//       res.json({
-        
-//         username: result.username,
-//         _id: result.id,
-//         description: newLog.description,
-//         duration: newLog.duration,
-//         date: newLog.date
-//         // _id: userId,
-//         // username: userdata.username,
-//         // date: newLog.date,
-//         // duration: newLog.duration,
-//         // description: newLog.description
-//       });
+
     }
   }); //saveExercise @ line 129
 
@@ -585,18 +534,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     res.json(exerciseObject);
   } else {
     res.json(exerciseObject[0]);
-      //[
-//       "_id:" +
-//         exerciseObject[0].id +
-//         ", username:" +
-//         exerciseObject[0].username +
-//         ", " +
-//       "count:"  +
-//         exerciseObject[0].count +", "+
-//       "log:"+
-//         JSON.stringify(exerciseObject[0].log) 
-        
-//     );
+
   }
 });
 
