@@ -29,7 +29,7 @@ var exerciseSchema = new mongoose.Schema({
       id: String,
       description: String, 
       duration: Number,
-      date: String,
+      date: Date
     }]
 });
 const exerciselogDB = mongoose.model("exercisecollections", exerciseSchema);
@@ -321,8 +321,14 @@ app.post("/api/exercise/add",  async function(req, res, next) {
        }
         if (result==null) {    // ie. this userID doesn't exist yet  - to pass test, must handle this:
           return res.send("Please create profile before adding exercise log");           
-
-      
+    // could generate userId and register User, but Not Required here
+//        const addUnregisteredUser = await fetch(url + '/api/exercise/add', {
+//           method: 'POST',
+//           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+//           body: `userId=${_id}&description=${expected.description}&duration=${expected.duration}`
+//         });
+//         if (addUnregisterdUser.ok) { //.ok => true if fetch 'response' successful
+//          }      
     }
   }});  // got(or created) userName and file on DB 
   
@@ -357,7 +363,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   //var key;
   if(!userId){
     if(_id){
-      userId=_id;    // incase user sends wrong name
+      userId=_id;    // incase user sends wrong name in querry
     }
     if(id){
       userId=id;
@@ -530,13 +536,30 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       exerciseObject[0].exercises.splice(limit);
     }
   }
+  
+  var responseObject={
+      _id:exerciseObject[0].id,
+      username:exerciseObject[0].username,
+      count:exerciseObject[0].count,
+      exercises:exerciseObject[0].exercises
+      
+  }
   if (!userId) {
     res.json(exerciseObject);
   } else {
-    res.json(exerciseObject[0]);
+    res.json(responseObject);
 
   }
 });
+// for future refference: can limit results easily using mongoose:
+//   exerciseLogDB.find()
+//       .where("_id")
+//       .equals(userId)
+//       .where("exercise.date")
+//       .gt(from)
+//       .lt(to)
+//       .exec((err, doc) => {
+
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
