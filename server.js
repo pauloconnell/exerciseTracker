@@ -7,22 +7,24 @@ const mongoose = require("mongoose");
 const shortid = require("shortid");
 var ourUserArray = []; // this will hold our users from DB
 var exerciseObject = {};
-
-
 var finalDocArray = [];
+
+//connect to DB
 mongoose.connect(process.env.DB_URI, {
   useNewUrlParser: true,
   useCreateIndex: true
-}); // if using node.js- || 'mongodb://localhost/exercise-track' )
+}); 
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set("useFindAndModify", false);
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+
+// set up our Schema for the DB
 var exerciseSchema = new mongoose.Schema({
   username: String,
-  id: String, // storing the string version _id as it comes into the API as a string
+  id: String, // storing the string version ShortId(_id) to keep it smaller for users
   count: Number,
   
   log: [{
@@ -32,21 +34,19 @@ var exerciseSchema = new mongoose.Schema({
       date: String
     }]
 });
+
+// create our model in DB collection
 const exerciselogDB = mongoose.model("exercisecollections", exerciseSchema);
 console.log("mongoose is: "+mongoose.connection.readyState);
 
 //add static file - style.css
-//app.use("/public", express.static(process.cwd() + "/public"));   //isn't working with /public route
 app.use(express.static(process.cwd() + "/public"));
-//define our routes
+
+//define our routes This challenge requires routes be included in server ( instead of seperating API routes to Public folder)
 app.get("/", (req, res) => {
   res.sendFile(process.cwd() + "/views/index.html");
 });
 
-// Not found middleware - caused error - err handled locally
-//app.use((req, res, next) => {
-//  return next({status: 404, message:req.body.new+'not found'})
-//})
 // Error Handling middleware
 app.use((err, req, res, next) => {
   let errCode, errMessage;
@@ -73,13 +73,13 @@ app.use((err, req, res, next) => {
 var username;
 var existingUser = false;
 
-//These all Should be in seperate files... model/index.js define some functions to access the DB that are available to all API endpoints
+//These all Should be in seperate files... but this project required one big server file
 // getUserID(username)
 //getAllUsers
 // getUserName(id)
 //saveExercise
 
-// get users id from username:
+// get users id from username: called at 315
 async function getUserId(username, done) {
   existingUser = false;
   let ourId;
@@ -88,6 +88,7 @@ async function getUserId(username, done) {
     .exec()
     .then(docs => {
       if (docs) {
+        // of course we would double check if this is actually our user by verifying address ect, but not required here
         existingUser = true;
         ourId = docs.id;
         console.log(
@@ -105,7 +106,7 @@ async function getUserId(username, done) {
     });
 }
 
-// function to get all users:       called at line 423
+// function to get all users:       called at line 273
 
 async function getAllUsers(done) {
   let userList = await exerciselogDB.find({}, { id: 1, username: 1, _id: 0 });
@@ -120,7 +121,7 @@ async function getAllUsers(done) {
     done(err);
   }
 }
-// get username from userId
+// get username from userId called at 315
 async function getUserName(id, done) {
   let thisUser = await exerciselogDB.find({ "id": id });
   console.log("line 137 count is: " + (thisUser[0].count));
@@ -132,26 +133,26 @@ if(thisUser[0].username){
 
 // function to find all users logs
 async function getUserLog(id, done) {
-  //called at line 530
+
   var userLog;
   var allUsers;
-  console.log("line 154 id is " + id);
+  console.log("line 134 id is " + id);
   if (id == null) {  // if no id querried, return all users
-    console.log("id=null at line 156");  
+    console.log("id=null at line 146");  
     await exerciselogDB.find({}, { _id:0 }, async function(err, data) {
       if (err) {
         console.log(err);
         done(err);
       }
       if (data) {
-        console.log("line 161 found " + JSON.stringify(data.log));
+        console.log("line 151 found " + JSON.stringify(data.log));
         userLog = data;
         return done(null, userLog);
-      } else console.log("no data at line 168" + data);
+      } else console.log("no data at line 158" + data);
     });
   } // if id:null closed
   else {
-    // else= we have id to search:
+    // else= we have id to search: (projection _id:0 prevents the big _id from being displayed)
     await exerciselogDB.find({ id: id }, {_id:0}, async function(err, data) {
       if (err) {
         console.log(err);
@@ -181,25 +182,15 @@ async function saveExercise(userId, log, done) {
   await exerciselogDB.findOne(
     { id: userId }, (err,data)=>
     {
-    //   $push: {
-    //     exercises: log
-    //   },
-    //   $inc: {
-    //     count: 1
-    //   }
-    // },
-    // { new: true,  "fields": { "_id":0, "exercises._id":0}}, //done());
-  //function(err, result) {
       if (err) {
-        console.log("line 218" + err);
+        console.log("line 186" + err);
         done(err);
       }
       else {
-      //  console.log("Line 220 " + JSON.stringify(result.username));
         data.log.push(log);
         data.count++;
         data.save((err, data)=>{
-          if (err) console.log("err at 204"+err);
+          if (err) console.log("err at 194"+err);
           return done(null, data);
         });
     }
@@ -209,7 +200,7 @@ async function saveExercise(userId, log, done) {
 
 // recieves submit data for user name- db will return id to use for logging exercises
 app.post("/api/exercise/new-user", async function(req, res) {
-  const { username } = req.body; //destructure POST variables
+  const { username } = req.body; //destructure POST variable username
   let log = []; // log will store exercise logs in the array of each user
   var date = new Date(); //  use current date
 
@@ -219,27 +210,27 @@ app.post("/api/exercise/new-user", async function(req, res) {
   console.log("connection State:" + mongoose.connection.readyState);
 
   // accessing db from a function call as per convention
-  //if (username==null) { return res.send("Must enter username");}
+  //if (username==null) { return res.send("Must enter username");} - Not Required as name is REQUIRED in form input
 
   await getUserId(username, function(err, result) {
-    //getUserId also sets existingUser true if so
+    
     if (err) {
       console.log(err);
       return res.send(err);
     }
     if (result) {    
-      console.log("line 293 found user " + result.toString());
+      console.log("line 223 found user " + result.toString());
       res.json({ message: "username already taken id:"+result.id });
-      //return res.json({ exisitingUser: 'foundTrue', message:'If u are a new user please choose another username',  username: username, _id: result.toString()});
+      
     }
-    else existingUser=false;
+    else existingUser=false; 
   });
 
   
   //save new user's profile
   if (!existingUser) {
-    console.log("Schema creation at line 300");
-  
+    console.log("Schema creation at line 230");
+    
     const exerciseModel = new exerciselogDB({
       username: username,
       id: shortid.generate(),
@@ -250,19 +241,17 @@ app.post("/api/exercise/new-user", async function(req, res) {
     try {
       await saveThisHasAllLogsForUser(exerciseModel, function(err, result) {
         if (err) {
-          console.log(err + "@line 355");
+          console.log(err + "@line 245");
         }
         if (result) {
-          console.log(exerciseModel + "saved at line 358");
+          console.log(exerciseModel + "saved at line 248");
           return res.json({username: result.username, _id: result.id});
         }
-      }); //located at line 129
+      }); 
     } catch (err) {
       console.log(err);
       return "error saving to data base" + err;
     }
-
-    //return res.json({ username: req.body.username, _id: exerciseModel.id });
   }
 });
 
@@ -321,46 +310,38 @@ app.post("/api/exercise/add",  async function(req, res, next) {
        }
         if (result==null) {    // ie. this userID doesn't exist yet  - to pass test, must handle this:
           return res.send("Please create profile before adding exercise log");           
-    // could generate userId and register User, but Not Required here
-//        const addUnregisteredUser = await fetch(url + '/api/exercise/add', {
-//           method: 'POST',
-//           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-//           body: `userId=${_id}&description=${expected.description}&duration=${expected.duration}`
-//         });
-//         if (addUnregisterdUser.ok) { //.ok => true if fetch 'response' successful
-//          }      
+    // could easily generate userId and register User, but Not Required so sticking to requirements
     }
-  }});  // got(or created) userName and file on DB 
+  }});  
   
 
   
   // add the exercise
 
   await saveExercise(userId, newLog, async function(err, result) {
-    //defined at line 173
     if (err) console.log(err);
     else {
-      console.log("success exercise saved at 428 "); //+result.toString());    // result of save not needed
-      console.log("line 344 count is " + JSON.stringify(result.count));
+      console.log("success exercise saved at 328 "); //+result.toString());    // result of save not needed
+      console.log("line 324 count is " + JSON.stringify(result.count));
       
      var dateString = result.log[result.count-1].date;  // cut time off the date
       res.json({username:result.username, description:result.log[result.count-1].description, duration:result.log[result.count-1].duration, _id:userId, date:(dateString.substr(0,15))});
      
 
     }
-  }); //saveExercise @ line 129
+  }); 
 
 
-}); // closes this api endpoint
+}); // closes this api endpoint /add
 
 
-//to get user logs  querry from url     ?userName=p_ollie
+//to get user logs  querry from url     ?userName=Johnny
 app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   req,
   res
 ) {
-  var { userId, userid, id, _id, from, to, limit } = req.query; // load userName in URL query ?userN=tara
-  //var key;
+  var { userId, userid, id, _id, from, to, limit } = req.query; // load userName in URL query ?userId=tara
+  //user may use different terms in query, so ensure we load up userId 
   if(!userId){
     if(_id){
       userId=_id;    // incase user sends wrong name in querry
@@ -372,10 +353,9 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     if(userid){
       userId=userid;
     }
-      
   }
 
-  console.log(JSON.stringify(req.body) + "Line 377 from and to :" + from, to);
+  console.log(JSON.stringify(req.body) + "Line 357 from and to :" + from, to);
   if (from) {
     // convert String(input always type=string) to Date
     var From = new Date(from);
@@ -396,38 +376,34 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       To = null;
     }
   }
-  console.log("line 445 userId =" + userId);
+  console.log("line 379 userId =" + userId);
   await getUserLog(userId, async function(err, docs) {
     // defined at line 151 and can handle userId=null if so
     if (err) return res.send("error getting documents");
     else {
       if (docs == null||!docs) {
         console.log("warning - docs=null");
-      }
-      
-      exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
-      count = exerciseObject[0].count;
-      console.log(
-        "410 docs are found # of logs is " +
-          count 
-      ); 
+      }else{
 
-      //return res.json({ docs}); // if no id, display all logs)
+        exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
+        count = exerciseObject[0].count;
+        console.log(
+          "390 docs are found # of logs is " + count ); 
+        }
     }
   });
   if (userId == null || userId == 0) {
-    console.log("466 userId is null");
+    console.log("400 userId is null");
   } else {
     // below skipped if no userId
     
     if (count = 0) {
-      console.log("line 506 no entries in this userObject yet ");
+      console.log("line 406 no entries in this userObject yet ");
     }
    
-   //  console.log(JSON.stringify(exerciseObject[0].username) + " is our username line 530 :)");
     
     console.log(
-      "line 430 " +
+      "line 410 " +
         " Access items like description : " +
         JSON.stringify(exerciseObject[0].log)
     ); 
@@ -438,8 +414,6 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   }
 
   if (To) {
-    //let toDate = new Date(to);
-    //    if(new Date(element.date).toString()!=="Invalid Date"&& element.date){
     var counter = exerciseObject[0].log.length;
     console.log(
       "line 612 " +
@@ -449,11 +423,8 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         " and compare to date: " +
         To
     );
-    //for (let logs in exerciseObject[0].log){
-    //let docDate= new Date(logs.date);
     let docDate = null;
     for (var i = 0; i < counter; i++) {
-      //if(exerciseObject[0].log[i].date)
       try {
         console.log(
           "i is" +
@@ -465,7 +436,6 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         );
         docDate = new Date(exerciseObject[0].log[i].date);
         console.log("docDate is " + docDate);
-        //exerciseObject[0].log[0].log.date
       } catch (err) {
         console.log(err + " @ line 610");
       }
@@ -476,8 +446,6 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         if (To.getTime() < docDate.getTime()) {
           // if date is after 'to', delete that element
           exerciseObject[0].log.splice(i, 1);
-
-          // delete exerciseObject[0].log[i];
           exerciseObject[0].count--;
           console.log(
             i +
@@ -487,18 +455,14 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
           );
           counter--; // because we deleted this pull counter back
           i--; // same for i;
-          //}
         }
       }
     }
   }
   if (From) {
-    //let fromDate = new Date(from);
-
     var count = exerciseObject[0].count;
     console.log("line 644 log Count is " + count);
     let docDate = null;
-   
     for (var i = 0; i < count; i++) {
       console.log(i + " is i and line 650 date is ");
       try {
@@ -523,7 +487,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
               count +
               "=" +
               exerciseObject[0].count
-          ); //+exerciseObject[0].log.length);
+          ); 
         }
       }
     }

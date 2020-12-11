@@ -11,9 +11,11 @@
    <body>
       <div class="container">
          <center><h1>Exercise Tracker</h1><br>
-        Simple app to create a user in the <b>database</b> with a unique userID and store exercises.
-        Back End <b>API</b> set up to be querried with parameters as described at bottom of page.</center>
-        
+           <hr>
+        <span class="smooth">Simple app to create a user in the <b>database</b> with a unique userID and store exercises.
+        Back End <b>API</b> set up to be queried with parameters as described at bottom of page.
+             </span></center>
+        <hr><center>
           <form action="/api/exercise/new-user" method="post" id="form1" >
             <center> <h3>Create a New User</h3>
             <p><code>Enter User Name and you will recieve your unique userID</code></p></center>
@@ -29,15 +31,23 @@
             <input id="dat" type="text" name="date" placeholder="date (yyyy-mm-dd)">
             <input type="submit" value="Submit">
           </form>
-          <p><strong>ADVANCED USERS:  exercise log: </strong><code>GET /api/exercise/log?{userId}[&amp;from][&amp;to][&amp;limit]</code></p>
-          <p><strong>{ }</strong> = required, <strong>[ ]</strong> = optional</p>
-          <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p>
-          <a id="myButton" href="/api/exercise/users/">
+        </center>
+        <hr><center><br>
+          
+            <p ><span class="smooth"><strong>ADVANCED USERS: API Query syntax for exercise log: </strong></span><br><code>GET /api/exercise/log?{userId}[&amp;from][&amp;to][&amp;limit]</code></p>
+          <span class="smooth"><p><strong>{ }</strong> = required, <strong>[ ]</strong> = optional</p>
+          <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p></span>
+        <br><hr><br>
+          
+        <span class="smooth"><a id="myButton" href="/api/exercise/users/">
             To get an Array of users get: /api/exercise/users/  OR CLICK HERE
-        </a><br><div style="width:100%;background:red;">&nbsp</div>
+        </a><br><br><hr><br>
         <a id="ExersisesButton" href="/api/exercise/log/">
             To get a list of exercises get: /api/exercise/log/  OR CLICK HERE
         </a>
+        </span>
+          
+        </center>
       </div>
    </body>
 
