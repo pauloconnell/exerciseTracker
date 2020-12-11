@@ -416,7 +416,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   if (To) {
     var counter = exerciseObject[0].log.length;
     console.log(
-      "line 612 " +
+      "line 412 " +
         exerciseObject[0].log.length +
         " is arrayLength," +
         counter +
@@ -437,7 +437,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         docDate = new Date(exerciseObject[0].log[i].date);
         console.log("docDate is " + docDate);
       } catch (err) {
-        console.log(err + " @ line 610");
+        console.log(err + " @ line 440");
       }
       console.log(
         To + To.getTime() + " is To Limit, compare date is: " + docDate
@@ -449,7 +449,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
           exerciseObject[0].count--;
           console.log(
             i +
-              " is i and 630 it worked item deleted" +
+              " is i and 450 it worked item deleted" +
               " log count is now = " +
               exerciseObject[0].count
           );
@@ -461,7 +461,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   }
   if (From) {
     var count = exerciseObject[0].count;
-    console.log("line 644 log Count is " + count);
+    console.log("line 464 log Count is " + count);
     let docDate = null;
     for (var i = 0; i < count; i++) {
       console.log(i + " is i and line 650 date is ");
@@ -472,7 +472,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
         console.log(err + " no data at i = " + i);
       }
       if (docDate) {
-        console.log("line 660 " + docDate);
+        console.log("line 470 " + docDate);
         
         if (From.getTime() > docDate.getTime()) {
           console.log("found 1 to delete on " + docDate);
@@ -492,7 +492,7 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       }
     }
     console.log(
-      "line 668  Done.  Log count is " + JSON.stringify(exerciseObject[0].count)
+      "line 498  Done.  Log count is " + JSON.stringify(exerciseObject[0].count)
     );
    }
   if (limit) {
