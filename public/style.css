@@ -25,7 +25,10 @@ p {
 }
 
 form {
+  vertical-align:middle;
   margin-bottom: 25px;
+  margin-right: 25px;
+  margin-top: auto;
   padding: 15px;
   background-color: #87D37C;
   display: inline-block;
@@ -79,6 +82,18 @@ a {
   
 }
 
+.bold {
+  font-weight: bold;
+}
+
+
+.form1{
+  float: left;
+}
+.form2{
+  float:right;
+}
+
 .smooth{
   background:rgb(0,0,0,.7);
   border-radius:6px;
@@ -89,16 +104,6 @@ a {
 }
 
 
-.form1{
-  float: left;
-}
-.form2{
-  float:right;
-}
-.bold {
-  font-weight: bold;
-}
-
 #title {
   background:rgb(0,0,0,.7);
   border-radius:6px;
@@ -107,6 +112,7 @@ a {
 }
 
 #info {
- background:rgb(0,0,0,.7);
-border-radius:6px;
+  background:rgb(0,0,0,.7);
+  border-radius:6px;
+  width:75%;
 }
