@@ -25,10 +25,8 @@ p {
 }
 
 form {
-  vertical-align:middle;
-  margin-bottom: 25px;
-  margin-right: 25px;
-  margin-top: auto;
+  vertical-align: middle;
+  margin: 25px;
   padding: 15px;
   background-color: #87D37C;
   display: inline-block;
@@ -56,7 +54,7 @@ input[type=submit] {
   border: 2px solid grey;
   box-shadow: 2px 2px #999;
   cursor: pointer;
-  onhover
+  
 }
 
 input[type=submit]:hover {
