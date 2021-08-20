@@ -1,7 +1,8 @@
 const express = require("express");
 const app = express();
+
 const bodyParser = require("body-parser");
-const { body, validationResult } = require('express-validator');
+const { body, validationResult } = require("express-validator");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const shortid = require("shortid");
@@ -13,31 +14,32 @@ var finalDocArray = [];
 mongoose.connect(process.env.DB_URI, {
   useNewUrlParser: true,
   useCreateIndex: true
-}); 
+});
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set("useFindAndModify", false);
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-
 // set up our Schema for the DB
 var exerciseSchema = new mongoose.Schema({
   username: String,
   id: String, // storing the string version ShortId(_id) to keep it smaller for users
   count: Number,
-  
-  log: [{
+
+  log: [
+    {
       id: String,
-      description: String, 
+      description: String,
       duration: Number,
       date: String
-    }]
+    }
+  ]
 });
 
 // create our model in DB collection
 const exerciselogDB = mongoose.model("exercisecollections", exerciseSchema);
-console.log("mongoose is: "+mongoose.connection.readyState);
+console.log("mongoose is: " + mongoose.connection.readyState);
 
 //add static file - style.css
 app.use(express.static(process.cwd() + "/public"));
@@ -50,7 +52,7 @@ app.get("/", (req, res) => {
 // Error Handling middleware
 app.use((err, req, res, next) => {
   let errCode, errMessage;
-    res({error:err});
+  res({ error: err });
   if (err.errors) {
     // mongoose validation error
     errCode = 400; // bad request
@@ -58,7 +60,6 @@ app.use((err, req, res, next) => {
     // report the first validation error
     errMessage = err.errors[keys[0]].message;
   } else {
-    
     // generic or custom error
     errCode = err.status || 500;
     errMessage = err.message || "Internal Server Error";
@@ -123,23 +124,22 @@ async function getAllUsers(done) {
 }
 // get username from userId called at 315
 async function getUserName(id, done) {
-  let thisUser = await exerciselogDB.find({ "id": id });
-  console.log("line 137 count is: " + (thisUser[0].count));
-if(thisUser[0].username){
-  done(null, thisUser[0].username);
-}
-  else done(null, null);
+  let thisUser = await exerciselogDB.find({ id: id });
+  console.log("line 137 count is: " + thisUser[0].count);
+  if (thisUser[0].username) {
+    done(null, thisUser[0].username);
+  } else done(null, null);
 }
 
 // function to find all users logs
 async function getUserLog(id, done) {
-
   var userLog;
   var allUsers;
   console.log("line 134 id is " + id);
-  if (id == null) {  // if no id querried, return all users
-    console.log("id=null at line 146");  
-    await exerciselogDB.find({}, { _id:0 }, async function(err, data) {
+  if (id == null) {
+    // if no id querried, return all users
+    console.log("id=null at line 146");
+    await exerciselogDB.find({}, { _id: 0 }, async function(err, data) {
       if (err) {
         console.log(err);
         done(err);
@@ -153,7 +153,7 @@ async function getUserLog(id, done) {
   } // if id:null closed
   else {
     // else= we have id to search: (projection _id:0 prevents the big _id from being displayed)
-    await exerciselogDB.find({ id: id }, {_id:0}, async function(err, data) {
+    await exerciselogDB.find({ id: id }, { _id: 0 }, async function(err, data) {
       if (err) {
         console.log(err);
         done(err);
@@ -177,25 +177,19 @@ async function saveThisHasAllLogsForUser(exerciseModel, done) {
 }
 // function to save exercise log in existing DB document- called at line...241 and line 323
 async function saveExercise(userId, log, done) {
-  console.log("at line 216 id is not known until we get the response from the DB below");
-
-  await exerciselogDB.findOne(
-    { id: userId }, (err,data)=>
-    {
-      if (err) {
-        console.log("line 186" + err);
-        done(err);
-      }
-      else {
-        data.log.push(log);
-        data.count++;
-        data.save((err, data)=>{
-          if (err) console.log("err at 194"+err);
-          return done(null, data);
-        });
+  await exerciselogDB.findOne({ id: userId }, (err, data) => {
+    if (err) {
+      console.log("line 186" + err);
+      done(err);
+    } else {
+      data.log.push(log);
+      data.count++;
+      data.save((err, data) => {
+        if (err) console.log("err at 194" + err);
+        return done(null, data);
+      });
     }
-    }
-  );  
+  });
 }
 
 // recieves submit data for user name- db will return id to use for logging exercises
@@ -213,24 +207,20 @@ app.post("/api/exercise/new-user", async function(req, res) {
   //if (username==null) { return res.send("Must enter username");} - Not Required as name is REQUIRED in form input
 
   await getUserId(username, function(err, result) {
-    
     if (err) {
       console.log(err);
       return res.send(err);
     }
-    if (result) {    
+    if (result) {
       console.log("line 223 found user " + result.toString());
-      res.json({ message: "username already taken id:"+result.id });
-      
-    }
-    else existingUser=false; 
+      res.json({ message: "username already taken id:" + result.id });
+    } else existingUser = false;
   });
 
-  
   //save new user's profile
   if (!existingUser) {
     console.log("Schema creation at line 230");
-    
+
     const exerciseModel = new exerciselogDB({
       username: username,
       id: shortid.generate(),
@@ -245,9 +235,9 @@ app.post("/api/exercise/new-user", async function(req, res) {
         }
         if (result) {
           console.log(exerciseModel + "saved at line 248");
-          return res.json({username: result.username, _id: result.id});
+          return res.json({ username: result.username, _id: result.id });
         }
-      }); 
+      });
     } catch (err) {
       console.log(err);
       return "error saving to data base" + err;
@@ -264,16 +254,13 @@ app.get("/api/exercise/users/", async function(req, res) {
   });
 });
 
-
-
-// this is where the exercise is logged 
-app.post("/api/exercise/add",  async function(req, res, next) {
-  
+// this is where the exercise is logged
+app.post("/api/exercise/add", async function(req, res, next) {
   var classDate;
   var dateString;
   var username;
   var { userId, description, duration, date } = req.body;
-  
+
   if (!userId || !description || !duration) {
     res.send(
       "User ID, Description and Duration are required fields - please enter values...hit refresh to continue"
@@ -288,52 +275,50 @@ app.post("/api/exercise/add",  async function(req, res, next) {
   if (date == null || date == "") {
     date = new Date();
   }
-  classDate = new Date(date);  
+  classDate = new Date(date);
   dateString = classDate.toString();
-  
+
   console.log("this should be a string " + dateString);
-  if(dateString=="Invalid Date") return res.send("invalid date - Please try again");
+  if (dateString == "Invalid Date")
+    return res.send("invalid date - Please try again");
   var newLog = {
-    id:  userId,
+    id: userId,
     description: description,
     duration: duration,
     date: dateString
   };
-// check if we have this user 
-  getUserName(userId, async function(err, result){
+  // check if we have this user
+  getUserName(userId, async function(err, result) {
     if (err) console.log(err);
     else {
       // console.log("success at 308"+result);
-       if (result) {
-         username=result;
-      //   console.log(result +"Result at line 307");
-       }
-        if (result==null) {    // ie. this userID doesn't exist yet  - to pass test, must handle this:
-          return res.send("Please create profile before adding exercise log");           
-    // could easily generate userId and register User, but Not Required so sticking to requirements
+      if (result) {
+        username = result;
+        //   console.log(result +"Result at line 307");
+      }
+      if (result == null) {
+        // ie. this userID doesn't exist yet  - to pass test, must handle this:
+        return res.send("Please create profile before adding exercise log");
+        // could easily generate userId and register User, but Not Required so sticking to requirements
+      }
     }
-  }});  
-  
+  });
 
-  
   // add the exercise
 
   await saveExercise(userId, newLog, async function(err, result) {
     if (err) console.log(err);
     else {
-      console.log("success exercise saved at 328 "); //+result.toString());    // result of save not needed
+      console.log("success exercise saved at 324 "); //+result.toString());    // result of save not needed
       console.log("line 324 count is " + JSON.stringify(result.count));
-      
-     var dateString = result.log[result.count-1].date;  // cut time off the date
+
+      var dateString = result.log[result.count - 1].date; // cut time off the date
+      // res.render("success");
+      //res.redirect("/");
       res.json({username:result.username, description:result.log[result.count-1].description, duration:result.log[result.count-1].duration, _id:userId, date:(dateString.substr(0,15))});
-     
-
     }
-  }); 
-
-
+  });
 }); // closes this api endpoint /add
-
 
 //to get user logs  querry from url     ?userName=Johnny
 app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
@@ -341,17 +326,17 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
   res
 ) {
   var { userId, userid, id, _id, from, to, limit } = req.query; // load userName in URL query ?userId=tara
-  //user may use different terms in query, so ensure we load up userId 
-  if(!userId){
-    if(_id){
-      userId=_id;    // incase user sends wrong name in querry
-      console.log("Log for userid : "+userId);
+  //user may use different terms in query, so ensure we load up userId
+  if (!userId) {
+    if (_id) {
+      userId = _id; // incase user sends wrong name in querry
+      console.log("Log for userid : " + userId);
     }
-    if(id){
-      userId=id;
+    if (id) {
+      userId = id;
     }
-    if(userid){
-      userId=userid;
+    if (userid) {
+      userId = userid;
     }
   }
 
@@ -381,36 +366,31 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
     // defined at line 151 and can handle userId=null if so
     if (err) return res.send("error getting documents");
     else {
-      if (docs == null||!docs) {
+      if (docs == null || !docs) {
         console.log("warning - docs=null");
-      }else{
-
+      } else {
         exerciseObject = docs; //Object.entries(docs[1]);                 can use log.count too
         count = exerciseObject[0].count;
-        console.log(
-          "390 docs are found # of logs is " + count ); 
-        }
+        console.log("390 docs are found # of logs is " + count);
+      }
     }
   });
   if (userId == null || userId == 0) {
     console.log("400 userId is null");
   } else {
     // below skipped if no userId
-    
-    if (count = 0) {
+
+    if ((count = 0)) {
       console.log("line 406 no entries in this userObject yet ");
     }
-   
-    
+
     console.log(
       "line 410 " +
         " Access items like description : " +
         JSON.stringify(exerciseObject[0].log)
-    ); 
-    
+    );
   } // this ends the elseif handling defined user
   if (!To && !From && !limit) {
-    
   }
 
   if (To) {
@@ -473,11 +453,11 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
       }
       if (docDate) {
         console.log("line 470 " + docDate);
-        
+
         if (From.getTime() > docDate.getTime()) {
           console.log("found 1 to delete on " + docDate);
           exerciseObject[0].log.splice(i, 1);
-             exerciseObject[0].count--;
+          exerciseObject[0].count--;
           count--; //because our exercise log list is now shorter
           i--; //this loop's counter reacts to deleted object
           console.log(
@@ -487,36 +467,34 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
               count +
               "=" +
               exerciseObject[0].count
-          ); 
+          );
         }
       }
     }
     console.log(
       "line 498  Done.  Log count is " + JSON.stringify(exerciseObject[0].count)
     );
-   }
+  }
   if (limit) {
     if (exerciseObject[0].log.length > limit) {
       console.log("trim results to meet limit " + limit);
       exerciseObject[0].log.splice(limit);
     }
   }
-  
-  var responseObject={
-      _id:exerciseObject[0].id,
-      username:exerciseObject[0].username,
-      count:exerciseObject[0].count,
-      log:exerciseObject[0].log
-      
-  }//must use log to pass test
-  
+
+  var responseObject = {
+    _id: exerciseObject[0].id,
+    username: exerciseObject[0].username,
+    count: exerciseObject[0].count,
+    log: exerciseObject[0].log
+  }; //must use log to pass test
+
   if (!userId) {
     console.log("No userID, response will be :", exerciseObject);
     res.json(exerciseObject);
   } else {
     console.log("response will be :", responseObject);
     res.json(responseObject);
-
   }
 });
 // for future refference: can limit results easily using mongoose:
@@ -527,7 +505,6 @@ app.get("/api/exercise/log/:userId?/:_id?:from?/:to?/:limit?", async function(
 //       .gt(from)
 //       .lt(to)
 //       .exec((err, doc) => {
-
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
