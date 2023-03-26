@@ -1,58 +1,147 @@
 <!DOCTYPE html>
 <html>
-  
-   <head>
-      <title>Exercise Tracker | Free Code Camp</title>
-      <link rel="shortcut icon" href="https://cdn.hyperdev.com/us-east-1%3A52a203ff-088b-420f-81be-45bf559d01b1%2Ffavicon.ico" type="image/x-icon"/>
-      <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
-      <link href="style.css" rel="stylesheet" type="text/css">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-   </head>
+  <head>
+    <title>Exercise Tracker</title>
+    <link
+      rel="shortcut icon"
+      href="https://cdn.hyperdev.com/us-east-1%3A52a203ff-088b-420f-81be-45bf559d01b1%2Ffavicon.ico"
+      type="image/x-icon"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link href="style.css" rel="stylesheet" type="text/css" />
 
-   <body>
-      <div class="container">
-         <center><h1 id="title">Exercise Tracker</h1><br>
-           <hr>
-        <span class="smooth">Simple app to create a user in the <b>database</b> with a unique userID and store exercises.
-        Back End <b>API</b> set up to be queried with parameters as described at bottom of page.
-             </span></center>
-        <hr><center>
-          <form action="/api/exercise/new-user" method="post" id="form1" >
-            <center> <h3>Create a New User</h3>
-            <p><code>Enter User Name and you will recieve your unique userID</code></p></center>
-            <input id="uname" type="text" name="username" placeholder="username" required>
-            <input type="submit" value="Submit">
-          </form>
-          <form action="/api/exercise/add" method="post" id="form2">
-            <center><h3>Add exercises</h3>
-            <p><code>Use your unique userID to log your exercises</code></p></center>
-            <input id="uid" type="text" name="userId" placeholder="userId*" required>
-            <input id="desc" type="text" name="description" placeholder="description*">
-            <input id="dur" type="text" name="duration" placeholder="duration* (mins.)">
-            <input id="dat" type="text" name="date" placeholder="date (yyyy-mm-dd)">
-            <input type="submit" value="Submit">
-          </form>
-        </center>
-        <hr><center><br>
-          
-        <div id="info">
-          
-       
-            <p ><span class="smooth"><strong>ADVANCED USERS: API Query syntax for exercise log: </strong></span><br><code>GET /api/exercise/log?{userId}[&amp;from][&amp;to][&amp;limit]</code></p>
-          <span class="smooth"><strong>{ }</strong> = required, <strong>[ ]</strong> = optional
-          <strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</span>
-        <br><hr><br>
-          
-        <span class="smooth"><a id="myButton" href="/api/exercise/users/">
-            To get an Array of users get: /api/exercise/users/  OR CLICK HERE
-        </a><br><br><hr><br>
-        <a id="ExersisesButton" href="/api/exercise/log/">
-            To get a list of exercises get: /api/exercise/log/  OR CLICK HERE
-        </a>
-        </span>
-        </div>
-        </center>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+
+  <body>
+    <div class="center">
+      <h1 id="title" class="textAlign">Exercise Tracker</h1>
+      <br />
+      <hr />
+      <div class="smooth textAlign padding center">
+        Front End: Simple Front End to create a user in the <b>database</b> with
+        a unique userID and store exercises. <br />Back End: <b>API</b> set up
+        to be queried with parameters as described at bottom of page.
       </div>
-   </body>
+      <hr />
+      <center>
+        <form action="/api/exercise/new-user" method="post" id="form1">
+          <center>
+            <h3>Create a New User</h3>
+            <p>
+              <code
+                >Enter User Name and you will recieve your unique userID</code
+              >
+            </p>
+          </center>
+          <input
+            id="uname"
+            type="text"
+            name="username"
+            placeholder="username"
+            required
+          />
+          <input type="submit" value="Submit" />
+        </form>
+        <form action="/api/exercise/add" method="post" id="form2">
+          <center>
+            <h3>Add exercises</h3>
+            <p><code>Use your unique userID to log your exercises</code></p>
+          </center>
+          <input
+            id="uid"
+            type="text"
+            name="userId"
+            placeholder="userId*"
+            required
+          />
+          <input
+            id="desc"
+            type="text"
+            name="description"
+            placeholder="description*"
+          />
+          <input
+            id="dur"
+            type="text"
+            name="duration"
+            placeholder="duration* (mins.)"
+          />
+          <input
+            id="dat"
+            type="text"
+            name="date"
+            placeholder="date (yyyy-mm-dd)"
+          />
+          <input type="submit" value="Submit" />
+        </form>
+      </center>
+      <hr />
+      <center>
+        <br />
 
+        <div id="info" class="padding">
+          <br />
+          <form method="get" id="getLog">
+            <script>
+              // this funciton inputs the user id then sets form action to hit reports API for that user
+
+              function setAPIroute(input) {
+                console.log("input got ", input, input.value);
+                let api = "/api/exercise/log?userId=" + input.value;
+                document.querySelector("#getLog").setAttribute("action", api);
+              }
+            </script>
+            Get a list of your exercise logs:
+            <br /><br />
+            <input
+              id="idList"
+              type="text"
+              name="idList"
+              placeholder="User Id"
+              required
+              onblur="setAPIroute(this)"
+            />
+
+            <input type="submit" value="Submit" />
+          </form>
+
+          <hr />
+
+          <div class="smooth">
+            <a id="myButton" href="/api/exercise/users/">
+              To get an Array of users get: /api/exercise/users/ OR CLICK HERE </a
+            ><br /><br />
+            <hr />
+            <br />
+            <a id="ExersisesButton" href="/api/exercise/log/">
+              To get a list of exercises get: /api/exercise/log/ OR CLICK HERE
+            </a>
+          </div>
+          <br />
+          <hr />
+
+          <span class="smooth"
+            ><strong
+              >ADVANCED USERS: API Query syntax for exercise log:
+            </strong></span
+          ><br /><code
+            >GET
+            /api/exercise/log?{userId}[&amp;from][&amp;to][&amp;limit]</code
+          >
+
+          <span class="smooth"
+            ><strong>{ }</strong> = required, <strong>[ ]</strong> = optional
+            <strong>from, to</strong> = dates (yyyy-mm-dd);
+            <strong>limit</strong> = number</span
+          >
+          <br />
+        </div>
+      </center>
+    </div>
+  </body>
 </html>

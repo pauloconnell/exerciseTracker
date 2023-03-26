@@ -13,8 +13,11 @@ var finalDocArray = [];
 //connect to DB
 mongoose.connect(process.env.DB_URI, {
   useNewUrlParser: true,
-  useCreateIndex: true
+  useCreateIndex: true,
+  useUnifiedTopology: true
 });
+
+console.log("ENV IS ",process.env.DATABASE_URL);
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set("useFindAndModify", false);
 app.use(cors());
