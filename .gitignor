@@ -4,8 +4,8 @@ node_modules/
 # Ignore all .log files
 *.log
 
-# Ignore specific file
-secret.txt
 
 # Ignor .env file
 .env
+
+# Ignore specific file   secret.txt
