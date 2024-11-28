@@ -7,28 +7,29 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "mongoose": "^5.9.6",
-    "mongodb": "^3.5.5",
     "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
-    "shortid": "^2.2.15",
-    "node": "^13.11.0",
     "connect-mongo": "^3.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
     "express-validator": "^6.6.0",
     "express-ws": "^5.0.2",
-    "dotenv": "^10.0.0"
+    "mongodb": "4.0",
+    "mongoose": "^5.9.6",
+    "node": "^13.11.0",
+    "shortid": "^2.2.15"
   },
   "engines": {
-    "node": "10.17.0"
+    "node": ">=14.17.0"
   },
   "repository": {
-    "url": "https://gomix.com/#!/project/welcome-project"
+    "url": "https://github.com/pauloconnell/exerciseTracker"
   },
   "license": "MIT",
   "keywords": [
     "node",
-    "gomix",
-    "express"
+    "mongoDB",
+    "express",
+    "web Dev"
   ]
 }

@@ -1,5 +1,8 @@
 const express = require("express");
+const path = require('path');
 const app = express();
+// Import and configure dotenv
+require('dotenv').config();
 
 const bodyParser = require("body-parser");
 const { body, validationResult } = require("express-validator");
@@ -17,7 +20,7 @@ mongoose.connect(process.env.DB_URI, {
   useUnifiedTopology: true
 });
 
-console.log("ENV IS ",process.env.DATABASE_URL);
+console.log("ENV IS ",process.env.DB_URI);
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set("useFindAndModify", false);
 app.use(cors());
@@ -45,28 +48,31 @@ const exerciselogDB = mongoose.model("exercisecollections", exerciseSchema);
 console.log("mongoose is: " + mongoose.connection.readyState);
 
 //add static file - style.css
-app.use(express.static(process.cwd() + "/public"));
+app.use(express.static(path.join(process.cwd(), "/frontend/public")));
 
 //define our routes This challenge requires routes be included in server ( instead of seperating API routes to Public folder)
 app.get("/", (req, res) => {
-  res.sendFile(process.cwd() + "/views/index.html");
+  console.log("in .get")
+  res.sendFile(process.cwd() + "/frontend/public/index.html");
 });
 
 // Error Handling middleware
 app.use((err, req, res, next) => {
-  let errCode, errMessage;
-  res({ error: err });
+  console.log("in middleware, error? ",err)
+  if (!err) { // No error, proceed to next middleware 
+    return next(); 
+  }
+
+  let errCode = err.status || 500; 
+  let errMessage = err.message || "Internal Server Error";
+  
+  // Check for Mongoose validation errors
   if (err.errors) {
-    // mongoose validation error
     errCode = 400; // bad request
     const keys = Object.keys(err.errors);
     // report the first validation error
     errMessage = err.errors[keys[0]].message;
-  } else {
-    // generic or custom error
-    errCode = err.status || 500;
-    errMessage = err.message || "Internal Server Error";
-  }
+  } 
   res
     .status(errCode)
     .type("txt")
