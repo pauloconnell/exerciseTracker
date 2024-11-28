@@ -14,7 +14,7 @@
     "express": "^4.17.1",
     "express-validator": "^6.6.0",
     "express-ws": "^5.0.2",
-    "mongodb": "4.0",
+    "mongodb": "4.17",
     "mongoose": "^5.9.6",
     "node": "^13.11.0",
     "shortid": "^2.2.15"
